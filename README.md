@@ -102,11 +102,11 @@ All SDKs live directly in the `/sdk` directory and are designed with **zero heav
 *Deep Dive:* **[TypeScript SDK Documentation](docs/SDK_TYPESCRIPT.md)**
 
 ```bash
-npm install @notifypush/sdk
+npm install notifypush-client
 ```
 
 ```typescript
-import { notify } from '@notifypush/sdk';
+import { notify } from 'notifypush-client';
 
 // Fire alert from any API route, Server Action, or webhook:
 await notify.send({

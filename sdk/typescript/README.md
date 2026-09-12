@@ -29,7 +29,7 @@ NOTIFY_TOKEN=tk_optional_auth_token
 
 ### 2. Basic Dispatch (Next.js / Node.js)
 ```typescript
-import { notify } from '@notifypush/sdk';
+import { notify } from 'notifypush-client';
 
 await notify.send({
   title: "💳 Payment Received",
@@ -45,7 +45,7 @@ await notify.send({
 
 ### 3. Custom Client Instance
 ```typescript
-import { NotifyPushClient } from '@notifypush/sdk';
+import { NotifyPushClient } from 'notifypush-client';
 
 const client = new NotifyPushClient({
   serverUrl: 'https://ntfy.private-domain.com',

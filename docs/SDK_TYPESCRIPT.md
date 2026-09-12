@@ -33,7 +33,7 @@ NOTIFY_TOKEN=tk_optional_bearer_token
 
 ```typescript
 // app/api/alerts/route.ts
-import { notify } from '@notifypush/sdk';
+import { notify } from 'notifypush-client';
 import { NextResponse } from 'next/server';
 
 export async function POST(req: Request) {
@@ -70,7 +70,7 @@ export async function POST(req: Request) {
 // app/actions.ts
 'use server';
 
-import { notify } from '@notifypush/sdk';
+import { notify } from 'notifypush-client';
 
 export async function reportFeedback(userMessage: string) {
   await notify.send({
@@ -89,7 +89,7 @@ export async function reportFeedback(userMessage: string) {
 If your app reports to multiple distinct channels (e.g., Billing vs. DevOps vs. Security):
 
 ```typescript
-import { NotifyPushClient } from '@notifypush/sdk';
+import { NotifyPushClient } from 'notifypush-client';
 
 const opsClient = new NotifyPushClient({
   serverUrl: 'https://notify.internal.company.com',
@@ -120,7 +120,7 @@ await opsClient.send({
 To prevent anyone from guessing your topic on public servers, derive an unpredictable topic from your app's master secret:
 
 ```typescript
-import { deriveSecureTopic, notify } from '@notifypush/sdk';
+import { deriveSecureTopic, notify } from 'notifypush-client';
 
 const APP_SECRET = process.env.APP_SECRET_KEY!;
 const secureTopic = deriveSecureTopic(APP_SECRET, 'user_account_9012');
@@ -140,7 +140,7 @@ await notify.send({
 Encrypt message bodies before sending them across the wire. Only devices configured with the matching AES key can decrypt them:
 
 ```typescript
-import { encryptPayload } from '@notifypush/sdk';
+import { encryptPayload } from 'notifypush-client';
 
 const base64Key = process.env.NOTIFICATION_AES_KEY!; // 256-bit base64
 const { ciphertext, iv, tag } = encryptPayload("Secret customer details", base64Key);

@@ -99,19 +99,19 @@ curl -X POST "https://ntfy.sh/sudhir-alerts-9821" \
 
 ### A. Next.js / Node.js / TypeScript
 
-Humara official `@notifypush/sdk` zero-dependency native fetch use karta hai:
+Humara official `notifypush-client` zero-dependency native fetch use karta hai:
 
 #### Installation:
 ```bash
 # Terminal me run karein:
-npm install @notifypush/sdk
+npm install notifypush-client
 # ya
-pnpm add @notifypush/sdk
+pnpm add notifypush-client
 ```
 
 #### Code (Next.js App Router: `app/api/checkout/route.ts`):
 ```typescript
-import { notify } from '@notifypush/sdk';
+import { notify } from 'notifypush-client';
 import { NextResponse } from 'next/server';
 
 export async function POST(req: Request) {

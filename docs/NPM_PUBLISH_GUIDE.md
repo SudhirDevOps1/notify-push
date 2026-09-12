@@ -10,12 +10,11 @@ Is guide me bataya gaya hai ki kaise aap **NPM credentials** GitHub repository m
 2. Apni profile icon par click karein aur **Access Tokens** select karein.
 3. **Generate New Token** ➔ **Classic Token** ya **Granular Access Token** select karein:
    - **Type**: `Automation` (CI/CD environments ke liye recommended, isme 2FA prompt bypass rehta hai).
-   - **Package**: `@notifypush/sdk` (ya all packages).
+   - **Package**: `notifypush-client` (ya all packages).
    - **Permissions**: `Read and Write`.
 4. Generated Token ko copy kar lijiye (yeh dobara nahi dikhega).
 
-> **Important Note for Scoped Packages (`@notifypush/...`)**:  
-> Agar aapka npm username `notifypush` nahi hai, toh aap npmjs.com par `notifypush` naam ka free organization create kar sakte hain, ya `package.json` me scope ko apne username ke mutabik change kar sakte hain (e.g. `@sudhirdevops1/notifypush-sdk` ya `notifypush-sdk`).
+> **Note**: Package ka official public name **`notifypush-client`** hai, jo bina kisi organization setup ke direct publish ho jata hai.
 
 ---
 
@@ -48,7 +47,7 @@ git push origin v1.0.0
 Jaise hi aap tag push karenge, `.github/workflows/release.yml` automatic start hoga:
 1. ✅ **Android App Build**: Tests run karega aur `NotifyPush-debug.apk` compile karega.
 2. ✅ **TypeScript SDK Build**: `sdk/typescript` me compile karega (`tsc`).
-3. ✅ **NPM Live Publish**: Agar `NPM_TOKEN` secret set hai, toh `@notifypush/sdk` npm registry par **live publish** ho jayega!
+3. ✅ **NPM Live Publish**: Agar `NPM_TOKEN` secret set hai, toh `notifypush-client` npm registry par **live publish** ho jayega!
 4. ✅ **GitHub Release**: Automatic release create karke usme `NotifyPush-debug.apk` attach kar dega jisse users direct download kar sakein!
 
 ---
