@@ -125,9 +125,43 @@ jobs:
             echo "Successfully handled NPM publish step!"
           fi
 
+  build-desktop:
+    name: Build Windows Desktop App
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: desktop/package-lock.json
+
+      - name: Install dependencies
+        working-directory: desktop
+        run: npm ci
+
+      - name: Build Portable Windows Executable
+        working-directory: desktop
+        run: npm run build:portable
+
+      - name: Prepare Desktop Release Artifact
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path release-artifacts-desktop
+          Copy-Item desktop/dist/NotifyPush-Windows-*.exe release-artifacts-desktop/NotifyPush-Windows-Portable.exe
+
+      - name: Upload Desktop Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: notifypush-desktop-exe
+          path: release-artifacts-desktop/NotifyPush-Windows-Portable.exe
+          if-no-files-found: error
+
   create-github-release:
     name: Create GitHub Release
-    needs: [build-android, publish-npm]
+    needs: [build-android, build-desktop, publish-npm]
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
     steps:
@@ -139,12 +173,20 @@ jobs:
           name: notifypush-apk
           path: release-artifacts
 
+      - name: Download Desktop Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: notifypush-desktop-exe
+          path: release-artifacts
+
       - name: Create GitHub Release with Assets
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_type == 'tag' && github.ref_name || inputs.release_tag }}
           name: Release ${{ github.ref_type == 'tag' && github.ref_name || inputs.release_tag }}
-          files: release-artifacts/NotifyPush-debug.apk
+          files: |
+            release-artifacts/NotifyPush-debug.apk
+            release-artifacts/NotifyPush-Windows-Portable.exe
           generate_release_notes: true
           draft: false
           prerelease: false
