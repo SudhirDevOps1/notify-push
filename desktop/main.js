@@ -138,6 +138,16 @@ function stopActiveStream() {
   }
 }
 
+function getTopics() {
+  if (Array.isArray(appConfig.topics) && appConfig.topics.length > 0) {
+    return appConfig.topics.map(t => String(t).trim()).filter(Boolean);
+  }
+  if (appConfig.topic) {
+    return String(appConfig.topic).split(',').map(t => t.trim()).filter(Boolean);
+  }
+  return [];
+}
+
 function startSseConnection() {
   stopActiveStream();
 
@@ -146,14 +156,15 @@ function startSseConnection() {
     reconnectTimer = null;
   }
 
-  const topic = appConfig.topic?.trim();
-  if (!topic) {
+  const topics = getTopics();
+  if (topics.length === 0) {
     updateStatus('No Topic Configured');
     return;
   }
 
   let server = (appConfig.serverUrl || 'https://ntfy.sh').trim().replace(/\/+$/, '');
-  const urlStr = `${server}/${encodeURIComponent(topic)}/json`;
+  // ntfy supports comma-separated topics in a single stream: server/topic1,topic2/json
+  const urlStr = `${server}/${topics.map(encodeURIComponent).join(',')}/json`;
 
   updateStatus('Connecting...');
 
@@ -327,11 +338,15 @@ function handleIncomingNotification(data) {
     } catch (e) {}
   }
 
+  const topics = getTopics();
+  const itemTopic = data.topic || (topics.length > 0 ? topics[0] : '');
+
   const item = {
     id: data.id || ('id_' + Date.now()),
     time: data.time ? data.time * 1000 : Date.now(),
     title,
     message,
+    topic: itemTopic,
     priority,
     tags,
     clickUrl,
@@ -348,10 +363,11 @@ function handleIncomingNotification(data) {
     mainWindow.webContents.send('new-notification', item);
   }
 
-  // Windows Native Toast Notification
+  // Windows Native Toast Notification (Shows which app/topic sent it)
   if (Notification.isSupported()) {
+    const toastTitle = item.topic ? `[${item.topic}] ${item.title}` : item.title;
     const notif = new Notification({
-      title: item.title,
+      title: toastTitle,
       body: item.message,
       icon: path.join(__dirname, 'assets', 'icon.png'),
       silent: !appConfig.sound
@@ -371,11 +387,12 @@ function handleIncomingNotification(data) {
 }
 
 function sendTestAlert() {
-  const topic = appConfig.topic;
-  if (!topic) return;
+  const topics = getTopics();
+  const targetTopic = topics.length > 0 ? topics[0] : (appConfig.topic || 'test-topic');
+  if (!targetTopic) return;
 
   let server = (appConfig.serverUrl || 'https://ntfy.sh').replace(/\/+$/, '');
-  const url = `${server}/${encodeURIComponent(topic)}`;
+  const url = `${server}/${encodeURIComponent(targetTopic)}`;
 
   const systemCurl = path.join(process.env.SystemRoot || 'C:\\Windows', 'System32', 'curl.exe');
   const curlExe = fs.existsSync(systemCurl) ? systemCurl : 'curl.exe';

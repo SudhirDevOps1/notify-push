@@ -107,7 +107,8 @@ object NotificationHelper {
         message: String,
         clickUrl: String?,
         priority: Int,
-        tags: List<String>
+        tags: List<String>,
+        topic: String? = null
     ): Int {
         val notificationId = notificationIdCounter.incrementAndGet()
 
@@ -159,6 +160,10 @@ object NotificationHelper {
             .setCategory(NotificationCompat.CATEGORY_MESSAGE)
             .setAutoCancel(true)
             .setContentIntent(contentIntent)
+
+        if (!topic.isNullOrBlank()) {
+            builder.setSubText(topic)
+        }
 
         // For high priority (4 or 5), make sure it pops up as heads-up banner
         if (priority >= 4) {

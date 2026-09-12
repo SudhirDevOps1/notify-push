@@ -18,6 +18,7 @@
         </div>
       </div>
       <div class="header-actions">
+        <button id="btnWebSnippet" class="icon-btn" title="Website Integration Code">🌐</button>
         <button id="btnTest" class="icon-btn" title="Send Test Notification">🔔</button>
         <button id="btnExport" class="icon-btn" title="Export History as JSON">📋</button>
         <button id="btnClear" class="icon-btn danger" title="Clear History">🗑️</button>
@@ -41,8 +42,9 @@
       </div>
       <form id="configForm" class="config-form collapsed">
         <div class="input-group">
-          <label for="inputTopic">Topic Name *</label>
-          <input type="text" id="inputTopic" placeholder="e.g. my-server-alerts-9901" required autocomplete="off" />
+          <label for="inputTopic">Subscribed Topics / Apps *</label>
+          <input type="text" id="inputTopic" placeholder="e.g. store-alerts, web-leads, server-bot" required autocomplete="off" />
+          <small class="input-hint">Tip: Separate multiple topics with commas to receive alerts from multiple websites & apps!</small>
         </div>
         <div class="input-group">
           <label for="inputServer">Server URL</label>
@@ -85,6 +87,21 @@
         </div>
       </div>
     </section>
+  </div>
+
+  <!-- Web Integration Modal -->
+  <div class="modal-backdrop" id="modalWebSnippet">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>🌐 Embed in Your Website</h3>
+        <button id="btnCloseModal" class="close-btn">&times;</button>
+      </div>
+      <p class="modal-desc">Add this snippet into any HTML page, React, or WordPress site to send push alerts directly to your devices:</p>
+      <div class="code-box">
+        <pre><code id="snippetPreview"></code></pre>
+        <button id="btnCopyWebSnippet" class="btn-copy">📋 Copy HTML Code</button>
+      </div>
+    </div>
   </div>
 
   <script src="app.js"></script>

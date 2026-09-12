@@ -139,19 +139,24 @@ class NotificationListenerService : Service() {
         connectionJob?.cancel()
         connectionJob = serviceScope.launch {
             val serverUrl = prefs.serverUrl
-            val topic = prefs.topic
+            val rawTopic = prefs.topic
             val token = prefs.token
 
-            if (topic.isBlank()) {
+            val topics = rawTopic.split(",")
+                .map { it.trim() }
+                .filter { it.isNotBlank() }
+
+            if (topics.isEmpty()) {
                 _connectionState.value = ConnectionState.Error("No topic configured")
                 updateForegroundNotification("Unset", "Topic not set")
                 return@launch
             }
 
             _connectionState.value = ConnectionState.Connecting
-            updateForegroundNotification(topic, "Connecting to $serverUrl...")
+            updateForegroundNotification(rawTopic, "Connecting to $serverUrl...")
 
-            val sseUrl = "$serverUrl/$topic/sse"
+            val multiTopicPath = topics.joinToString(",") { it }
+            val sseUrl = "$serverUrl/$multiTopicPath/sse"
             Log.d(TAG, "Initiating SSE connection to: $sseUrl")
 
             val requestBuilder = Request.Builder()
@@ -171,10 +176,10 @@ class NotificationListenerService : Service() {
             val factory = EventSources.createFactory(okHttpClient)
             eventSource = factory.newEventSource(request, object : EventSourceListener() {
                 override fun onOpen(eventSource: EventSource, response: Response) {
-                    Log.i(TAG, "SSE Connected to topic: $topic (HTTP ${response.code})")
+                    Log.i(TAG, "SSE Connected to topics: $multiTopicPath (HTTP ${response.code})")
                     retryAttempt = 0
-                    _connectionState.value = ConnectionState.Connected(topic)
-                    updateForegroundNotification(topic, "Connected • Listening for alerts")
+                    _connectionState.value = ConnectionState.Connected(rawTopic)
+                    updateForegroundNotification(rawTopic, "Connected • Listening for alerts")
                 }
 
                 override fun onEvent(eventSource: EventSource, id: String?, type: String?, data: String) {
@@ -196,10 +201,10 @@ class NotificationListenerService : Service() {
 
                     if (code == 401 || code == 403) {
                         _connectionState.value = ConnectionState.Error("Auth failed (HTTP $code). Check API key / Access Token.")
-                        updateForegroundNotification(topic, "Auth failed (HTTP $code)")
+                        updateForegroundNotification(rawTopic, "Auth failed (HTTP $code)")
                     } else if (code == 404) {
                         _connectionState.value = ConnectionState.Error("Topic or server not found (HTTP 404)")
-                        updateForegroundNotification(topic, "Error: 404 Not Found")
+                        updateForegroundNotification(rawTopic, "Error: 404 Not Found")
                     } else {
                         if (!isManuallyStopped) {
                             scheduleReconnect()
@@ -256,7 +261,8 @@ class NotificationListenerService : Service() {
                         message = message,
                         clickUrl = clickUrl,
                         priority = priority,
-                        tags = tagsList
+                        tags = tagsList,
+                        topic = topic
                     )
                 }
             } catch (e: Exception) {

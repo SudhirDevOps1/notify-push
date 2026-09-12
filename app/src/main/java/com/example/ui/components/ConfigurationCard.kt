@@ -249,12 +249,19 @@ fun ConfigurationCard(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // 2. Secret Topic Name field
+            // 2. Secret Topic Name / Channels field
             OutlinedTextField(
                 value = topic,
                 onValueChange = onTopicChange,
-                label = { Text("Secret Topic Name") },
-                placeholder = { Text("e.g. my-secure-alerts-9921") },
+                label = { Text("Topic / Channels") },
+                placeholder = { Text("e.g. app1, store, alerts (comma-separated)") },
+                supportingText = {
+                    Text(
+                        text = "Multiple apps/sites supported: separate by comma (e.g. store, blog, alerts)",
+                        style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                },
                 leadingIcon = {
                     Icon(
                         imageVector = Icons.Outlined.Tag,

@@ -19,6 +19,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   const btnTest = document.getElementById('btnTest');
   const btnExport = document.getElementById('btnExport');
   const btnClear = document.getElementById('btnClear');
+  const btnWebSnippet = document.getElementById('btnWebSnippet');
+
+  const modalWebSnippet = document.getElementById('modalWebSnippet');
+  const btnCloseModal = document.getElementById('btnCloseModal');
+  const snippetPreview = document.getElementById('snippetPreview');
+  const btnCopyWebSnippet = document.getElementById('btnCopyWebSnippet');
 
   let allNotifications = [];
 
@@ -118,7 +124,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       card.innerHTML = `
         <div class="notif-header">
           <span class="notif-title">${escapeHtml(item.title || 'Notification')}</span>
-          <span class="notif-time">${dateStr}</span>
+          <div style="display: flex; align-items: center; gap: 6px;">
+            ${item.topic ? `<span class="notif-topic">📡 ${escapeHtml(item.topic)}</span>` : ''}
+            <span class="notif-time">${dateStr}</span>
+          </div>
         </div>
         <div class="notif-body">${escapeHtml(item.message || '')}</div>
         ${tagsHtml}
@@ -169,7 +178,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const filtered = allNotifications.filter(n =>
       (n.title && n.title.toLowerCase().includes(query)) ||
       (n.message && n.message.toLowerCase().includes(query)) ||
-      (n.tags && n.tags.some(t => t.toLowerCase().includes(query)))
+      (n.tags && n.tags.some(t => t.toLowerCase().includes(query))) ||
+      (n.topic && n.topic.toLowerCase().includes(query))
     );
     renderFeed(filtered);
   }
@@ -197,5 +207,54 @@ document.addEventListener('DOMContentLoaded', async () => {
       allNotifications = [];
       renderFeed(allNotifications);
     }
+  });
+
+  // 8. Web Integration Snippet Modal
+  function getSnippetCode() {
+    const activeServer = inputServer.value.trim() || 'https://ntfy.sh';
+    const firstTopic = (inputTopic.value || 'my-website').split(',')[0].trim() || 'my-website';
+    const activeToken = inputToken.value.trim();
+
+    return `&lt;!-- 1. Include NotifyPush Client --&gt;
+&lt;script src="https://cdn.jsdelivr.net/gh/SudhirDevOps1/notify-push@main/web/notifypush.js"&gt;&lt;/script&gt;
+&lt;script&gt;
+  // 2. Initialize with your website topic
+  const notify = new NotifyPush({
+    serverUrl: '${activeServer}',
+    topic: '${firstTopic}'${activeToken ? `,\n    token: '${activeToken}'` : ''}
+  });
+
+  // 3. Send alerts anytime!
+  notify.send({
+    title: 'New Lead / Order Received! 🚀',
+    message: 'A user submitted the contact form on your website.',
+    priority: 'high',
+    tags: ['globe', 'cart']
+  });
+&lt;/script&gt;`;
+  }
+
+  btnWebSnippet.addEventListener('click', () => {
+    snippetPreview.innerHTML = getSnippetCode();
+    modalWebSnippet.classList.add('active');
+  });
+
+  btnCloseModal.addEventListener('click', () => {
+    modalWebSnippet.classList.remove('active');
+  });
+
+  modalWebSnippet.addEventListener('click', (e) => {
+    if (e.target === modalWebSnippet) {
+      modalWebSnippet.classList.remove('active');
+    }
+  });
+
+  btnCopyWebSnippet.addEventListener('click', () => {
+    const textToCopy = snippetPreview.textContent;
+    navigator.clipboard.writeText(textToCopy);
+    btnCopyWebSnippet.textContent = '✅ Copied!';
+    setTimeout(() => {
+      btnCopyWebSnippet.textContent = '📋 Copy HTML Code';
+    }, 2000);
   });
 });

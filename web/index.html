@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NotifyPush - Universal Web Demo</title>
+  <style>
+    :root {
+      --bg: #0b0f19;
+      --card-bg: #151d2f;
+      --border: #243049;
+      --primary: #6366f1;
+      --primary-hover: #4f46e5;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --success: #10b981;
+      --danger: #ef4444;
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px;
+    }
+
+    .container {
+      max-width: 720px;
+      width: 100%;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    header h1 {
+      font-size: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+
+    header p {
+      color: var(--text-muted);
+      font-size: 15px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .card-title {
+      font-size: 18px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    input, textarea, select {
+      width: 100%;
+      padding: 12px 14px;
+      background: #0d1322;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 15px;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input:focus, textarea:focus, select:focus {
+      border-color: var(--primary);
+    }
+
+    .btn {
+      width: 100%;
+      padding: 14px;
+      background: var(--primary);
+      color: #fff;
+      font-weight: 600;
+      font-size: 16px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: background 0.2s, transform 0.1s;
+    }
+
+    .btn:hover { background: var(--primary-hover); }
+    .btn:active { transform: scale(0.99); }
+
+    .status-toast {
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 14px;
+      margin-top: 14px;
+      display: none;
+    }
+
+    .status-toast.success {
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid var(--success);
+      color: var(--success);
+      display: block;
+    }
+
+    .status-toast.error {
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid var(--danger);
+      color: var(--danger);
+      display: block;
+    }
+
+    pre {
+      background: #090d16;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      overflow-x: auto;
+      font-size: 13px;
+      color: #38bdf8;
+      line-height: 1.5;
+    }
+
+    .copy-btn {
+      float: right;
+      background: var(--border);
+      color: var(--text);
+      border: none;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .copy-btn:hover { background: #334155; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🔔 NotifyPush Web Integration</h1>
+      <p>Instant Real-Time Push Alerts from Any Website to Your Android & Windows App</p>
+    </header>
+
+    <!-- Interactive Dispatch Form -->
+    <div class="card">
+      <h2 class="card-title">🚀 Send Live Web Alert</h2>
+      
+      <div class="form-group">
+        <label>Destination Topic Name</label>
+        <input type="text" id="inputTopic" value="desktop-alerts-5252" placeholder="e.g. desktop-alerts-5252" />
+        <small style="color: var(--text-muted); font-size: 12px; margin-top: 4px; display: block;">
+          Use the topic currently active in your Android mobile app or Windows desktop app.
+        </small>
+      </div>
+
+      <div class="form-group">
+        <label>Notification Title</label>
+        <input type="text" id="inputTitle" value="Website Lead Received 📩" />
+      </div>
+
+      <div class="form-group">
+        <label>Message Body</label>
+        <textarea id="inputMessage" rows="3">A visitor just submitted a request on your website!</textarea>
+      </div>
+
+      <button id="btnSend" class="btn">
+        <span>🚀 Dispatch Push Notification</span>
+      </button>
+
+      <div id="statusToast" class="status-toast"></div>
+    </div>
+
+    <!-- Contact Form Simulation -->
+    <div class="card">
+      <h2 class="card-title">📝 Auto Form Submitter (Contact Us Example)</h2>
+      <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 16px;">
+        Automatically alerts your phone whenever someone fills out a form on your website:
+      </p>
+
+      <form id="sampleContactForm">
+        <div class="form-group">
+          <label>Visitor Name</label>
+          <input type="text" name="visitor_name" value="Alex Smith" required />
+        </div>
+        <div class="form-group">
+          <label>Visitor Email</label>
+          <input type="email" name="visitor_email" value="alex@example.com" required />
+        </div>
+        <div class="form-group">
+          <label>Visitor Message</label>
+          <textarea name="inquiry_text" rows="2">Hello, I would like to schedule a demo of your product.</textarea>
+        </div>
+        <button type="submit" class="btn" style="background: #10b981;">
+          <span>Submit Form & Alert Phone/PC</span>
+        </button>
+      </form>
+    </div>
+
+    <!-- Copy-Paste Snippet -->
+    <div class="card">
+      <button class="copy-btn" id="btnCopySnippet">Copy Code</button>
+      <h2 class="card-title">💻 Copy-Paste HTML Code into Your Website</h2>
+      <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 12px;">
+        Add this single snippet to any webpage to send notifications:
+      </p>
+      <pre><code id="codeSnippet">&lt;!-- 1. Include NotifyPush Client --&gt;
+&lt;script src="https://cdn.jsdelivr.net/gh/SudhirDevOps1/notify-push@main/web/notifypush.js"&gt;&lt;/script&gt;
+
+&lt;!-- 2. Send an Alert --&gt;
+&lt;script&gt;
+  NotifyPush.send({
+    topic: 'desktop-alerts-5252',
+    title: 'Website Alert 🔔',
+    message: 'User completed checkout!',
+    priority: 'high',
+    tags: ['moneybag', 'bell']
+  });
+&lt;/script&gt;</code></pre>
+    </div>
+  </div>
+
+  <!-- Include Local NotifyPush Web Client -->
+  <script src="notifypush.js"></script>
+
+  <script>
+    const inputTopic = document.getElementById('inputTopic');
+    const inputTitle = document.getElementById('inputTitle');
+    const inputMessage = document.getElementById('inputMessage');
+    const btnSend = document.getElementById('btnSend');
+    const statusToast = document.getElementById('statusToast');
+    const sampleContactForm = document.getElementById('sampleContactForm');
+    const btnCopySnippet = document.getElementById('btnCopySnippet');
+    const codeSnippet = document.getElementById('codeSnippet');
+
+    function showToast(msg, isSuccess) {
+      statusToast.textContent = msg;
+      statusToast.className = 'status-toast ' + (isSuccess ? 'success' : 'error');
+      setTimeout(() => {
+        statusToast.className = 'status-toast';
+      }, 5000);
+    }
+
+    // 1. Manual Dispatch
+    btnSend.addEventListener('click', async () => {
+      const topic = inputTopic.value.trim();
+      const title = inputTitle.value.trim();
+      const message = inputMessage.value.trim();
+
+      if (!topic) {
+        showToast('Please specify a destination topic name!', false);
+        return;
+      }
+
+      btnSend.disabled = true;
+      btnSend.textContent = 'Sending...';
+
+      try {
+        const res = await NotifyPush.send({
+          topic,
+          title,
+          message,
+          priority: 'high',
+          tags: ['globe', 'bell']
+        });
+
+        if (res.success) {
+          showToast('✅ Push notification sent! Check your Android phone and Windows desktop.', true);
+        } else {
+          showToast('❌ Failed to dispatch: ' + res.error, false);
+        }
+      } catch (e) {
+        showToast('❌ Error: ' + e.message, false);
+      } finally {
+        btnSend.disabled = false;
+        btnSend.innerHTML = '<span>🚀 Dispatch Push Notification</span>';
+      }
+    });
+
+    // 2. Auto Bind Sample Form
+    NotifyPush.bindForm(sampleContactForm, {
+      topic: inputTopic.value.trim() || 'desktop-alerts-5252',
+      title: 'New Contact Form Lead 📩',
+      priority: 'urgent',
+      tags: ['memo', 'envelope']
+    });
+
+    sampleContactForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      showToast('✅ Form submitted! Instant alert fired to topic: ' + inputTopic.value.trim(), true);
+    });
+
+    // 3. Dynamic Snippet Updater
+    inputTopic.addEventListener('input', () => {
+      const currentTopic = inputTopic.value.trim() || 'my-website-topic';
+      codeSnippet.textContent = `<!-- 1. Include NotifyPush Client -->
+<script src="https://cdn.jsdelivr.net/gh/SudhirDevOps1/notify-push@main/web/notifypush.js"><\/script>
+
+<!-- 2. Send an Alert -->
+<script>
+  NotifyPush.send({
+    topic: '${currentTopic}',
+    title: 'Website Alert 🔔',
+    message: 'User completed action!',
+    priority: 'high',
+    tags: ['globe', 'bell']
+  });
+<\/script>`;
+    });
+
+    btnCopySnippet.addEventListener('click', () => {
+      navigator.clipboard.writeText(codeSnippet.textContent);
+      btnCopySnippet.textContent = 'Copied!';
+      setTimeout(() => btnCopySnippet.textContent = 'Copy Code', 2000);
+    });
+  </script>
+</body>
+</html>
