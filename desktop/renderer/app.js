@@ -37,6 +37,48 @@ document.addEventListener('DOMContentLoaded', async () => {
   const btnCopyWebSnippet = document.getElementById('btnCopyWebSnippet');
 
   let allNotifications = [];
+  let selectedAppFilter = 'all';
+
+  // Web Audio Context Synthesizer for Rich Per-App Sounds
+  let audioCtx = null;
+  function playAlertChime(priority, tags) {
+    if (!checkSound.checked) return;
+    try {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+
+      const isMoney = tags && (tags.includes('moneybag') || tags.includes('credit_card') || tags.includes('dollar') || tags.includes('shopping_bags'));
+      const isUrgent = priority >= 4 || (tags && (tags.includes('fire') || tags.includes('warning') || tags.includes('rotating_light')));
+
+      if (isMoney) {
+        // Cash Register Chime: Two cheerful high tones
+        playTone(987.77, 0.08, 0);   // B5
+        playTone(1318.51, 0.25, 0.08); // E6
+      } else if (isUrgent) {
+        // Urgent Siren: Fast alternating alert
+        playTone(880, 0.12, 0);
+        playTone(660, 0.12, 0.12);
+        playTone(880, 0.18, 0.24);
+      } else {
+        // Gentle Notification Ping
+        playTone(523.25, 0.12, 0);   // C5
+        playTone(659.25, 0.2, 0.1);   // E5
+      }
+    } catch (e) {}
+  }
+
+  function playTone(freq, duration, delay = 0) {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(freq, audioCtx.currentTime + delay);
+    gain.gain.setValueAtTime(0.12, audioCtx.currentTime + delay);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + delay + duration);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start(audioCtx.currentTime + delay);
+    osc.stop(audioCtx.currentTime + delay + duration);
+  }
   let currentConfig = await window.notifyPushApi.getConfig();
 
   // 1. Render Configured Apps
@@ -150,6 +192,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   btnCancelAddApp.addEventListener('click', hideAddAppForm);
   btnCancelAddApp2.addEventListener('click', hideAddAppForm);
 
+  inputNewAppTopic.addEventListener('input', () => {
+    // Auto-replace spaces and illegal characters with hyphens
+    inputNewAppTopic.value = inputNewAppTopic.value.toLowerCase().replace(/[^a-z0-9_-]/g, '-').replace(/-+/g, '-');
+  });
+
   btnGenRandomTopic.addEventListener('click', () => {
     inputNewAppTopic.value = 'app-' + Math.random().toString(36).substring(2, 9);
   });
@@ -172,6 +219,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   inputServer.value = currentConfig.serverUrl || 'https://ntfy.sh';
   inputToken.value = currentConfig.token || '';
   checkSound.checked = currentConfig.sound !== false;
+
+  const checkAutoStart = document.getElementById('checkAutoStart');
+  if (checkAutoStart && window.notifyPushApi.getAutoStart) {
+    const isAuto = await window.notifyPushApi.getAutoStart();
+    checkAutoStart.checked = isAuto;
+    checkAutoStart.addEventListener('change', async () => {
+      await window.notifyPushApi.setAutoStart(checkAutoStart.checked);
+    });
+  }
 
   btnToggleConfig.addEventListener('click', () => {
     configForm.classList.toggle('collapsed');
@@ -309,24 +365,71 @@ document.addEventListener('DOMContentLoaded', async () => {
   // 5. Real-Time New Notification Listener
   window.notifyPushApi.onNotification((newNotif) => {
     allNotifications.unshift(newNotif);
+    playAlertChime(newNotif.priority, newNotif.tags);
     filterAndRender();
   });
 
   // 6. Search / Filter
   function filterAndRender() {
     const query = inputSearch.value.trim().toLowerCase();
-    if (!query) {
-      renderFeed(allNotifications);
-      return;
+    let filtered = allNotifications;
+
+    if (selectedAppFilter !== 'all') {
+      filtered = filtered.filter(n => 
+        (n.appName && n.appName.toLowerCase() === selectedAppFilter.toLowerCase()) ||
+        (n.topic && n.topic.toLowerCase() === selectedAppFilter.toLowerCase())
+      );
     }
-    const filtered = allNotifications.filter(n =>
-      (n.title && n.title.toLowerCase().includes(query)) ||
-      (n.message && n.message.toLowerCase().includes(query)) ||
-      (n.tags && n.tags.some(t => t.toLowerCase().includes(query))) ||
-      (n.topic && n.topic.toLowerCase().includes(query)) ||
-      (n.appName && n.appName.toLowerCase().includes(query))
-    );
+
+    if (query) {
+      filtered = filtered.filter(n =>
+        (n.title && n.title.toLowerCase().includes(query)) ||
+        (n.message && n.message.toLowerCase().includes(query)) ||
+        (n.tags && n.tags.some(t => t.toLowerCase().includes(query))) ||
+        (n.topic && n.topic.toLowerCase().includes(query)) ||
+        (n.appName && n.appName.toLowerCase().includes(query))
+      );
+    }
     renderFeed(filtered);
+    updateFilterChipsUI();
+  }
+
+  function updateFilterChipsUI() {
+    const chipsContainer = document.getElementById('historyFilterChips');
+    if (!chipsContainer) return;
+
+    // Collect configured apps + unique apps in notifications
+    const apps = currentConfig.apps || [];
+    const appCounts = {};
+    allNotifications.forEach(n => {
+      const name = n.appName || n.topic || 'General';
+      appCounts[name] = (appCounts[name] || 0) + 1;
+    });
+
+    chipsContainer.innerHTML = '';
+
+    // 'All Apps' chip
+    const allChip = document.createElement('button');
+    allChip.className = `filter-chip ${selectedAppFilter === 'all' ? 'active' : ''}`;
+    allChip.innerHTML = `All Apps <span class="filter-chip-count">${allNotifications.length}</span>`;
+    allChip.addEventListener('click', () => {
+      selectedAppFilter = 'all';
+      filterAndRender();
+    });
+    chipsContainer.appendChild(allChip);
+
+    // Dynamic chips for each configured app
+    apps.forEach(app => {
+      const count = appCounts[app.name] || 0;
+      const chip = document.createElement('button');
+      chip.className = `filter-chip ${selectedAppFilter === app.name ? 'active' : ''}`;
+      chip.innerHTML = `${escapeHtml(app.name)} <span class="filter-chip-count">${count}</span>`;
+      chip.addEventListener('click', () => {
+        selectedAppFilter = selectedAppFilter === app.name ? 'all' : app.name;
+        filterAndRender();
+      });
+      chipsContainer.appendChild(chip);
+    });
   }
 
   inputSearch.addEventListener('input', filterAndRender);

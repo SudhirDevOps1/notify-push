@@ -36,8 +36,12 @@ import okhttp3.sse.EventSourceListener
 import okhttp3.sse.EventSources
 import org.json.JSONObject
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.ConcurrentHashMap
+
+private data class FloodRecord(val firstSeen: Long, var count: Int)
 
 class NotificationListenerService : Service() {
+    private val floodMap = ConcurrentHashMap<String, FloodRecord>()
 
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private var connectionJob: Job? = null

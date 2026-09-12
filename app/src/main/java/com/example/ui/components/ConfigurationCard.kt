@@ -404,7 +404,7 @@ fun ConfigurationCard(
 
                     OutlinedTextField(
                         value = newAppTopic,
-                        onValueChange = { newAppTopic = it },
+                        onValueChange = { newAppTopic = it.lowercase().replace(" ", "-") },
                         label = { Text("Topic Channel") },
                         placeholder = { Text("e.g. store-alerts-xyz") },
                         leadingIcon = {

@@ -12,6 +12,7 @@ let sseRequest = null;
 let reconnectTimer = null;
 let reconnectDelay = 1000;
 let connectionStatus = 'Disconnected';
+const recentFloodMap = new Map(); // Flood / Debounce Rate Limiter Map
 
 // Ensure single instance
 const gotTheLock = app.requestSingleInstanceLock();
@@ -166,14 +167,19 @@ function stopActiveStream() {
   }
 }
 
+function sanitizeTopic(t) {
+  if (!t) return '';
+  return String(t).trim().toLowerCase().replace(/[^a-z0-9_-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+}
+
 function getTopics() {
+  let list = [];
   if (Array.isArray(appConfig.apps) && appConfig.apps.length > 0) {
-    return appConfig.apps.map(a => String(a.topic).trim()).filter(Boolean);
+    list = appConfig.apps.map(a => sanitizeTopic(a.topic)).filter(Boolean);
+  } else if (appConfig.topic) {
+    list = String(appConfig.topic).split(',').map(t => sanitizeTopic(t)).filter(Boolean);
   }
-  if (appConfig.topic) {
-    return String(appConfig.topic).split(',').map(t => t.trim()).filter(Boolean);
-  }
-  return [];
+  return Array.from(new Set(list));
 }
 
 function getAppByTopic(topic) {
@@ -212,7 +218,7 @@ function startCurlStream(urlStr) {
   const systemCurl = path.join(process.env.SystemRoot || 'C:\\Windows', 'System32', 'curl.exe');
   const curlExe = fs.existsSync(systemCurl) ? systemCurl : 'curl.exe';
 
-  const args = ['-s', '-N'];
+  const args = ['-s', '-N', '-g'];
   if (appConfig.token?.trim()) {
     args.push('-H', `Authorization: Bearer ${appConfig.token.trim()}`);
   }
@@ -375,6 +381,31 @@ function handleIncomingNotification(data) {
   const itemTopic = data.topic || (topics.length > 0 ? topics[0] : '');
   const matchedApp = getAppByTopic(itemTopic);
   const appName = matchedApp ? matchedApp.name : itemTopic;
+
+  // Rate limiting / Flood debounce protection
+  const dedupeKey = `${itemTopic}::${title}::${String(message).slice(0, 60)}`;
+  const now = Date.now();
+  const floodEntry = recentFloodMap.get(dedupeKey);
+  if (floodEntry && (now - floodEntry.firstSeen < 15000)) {
+    floodEntry.count++;
+    if (floodEntry.count === 2) {
+      if (Notification.isSupported()) {
+        new Notification({
+          title: `[${appName}] ⚠️ Rapid Alerts Throttled`,
+          body: `Burst detected: Repeating alerts from ${appName} are being grouped.`,
+          silent: true
+        }).show();
+      }
+    }
+    return; // Suppress spam burst
+  } else {
+    recentFloodMap.set(dedupeKey, { firstSeen: now, count: 1 });
+    if (recentFloodMap.size > 200) {
+      for (const [k, v] of recentFloodMap.entries()) {
+        if (now - v.firstSeen > 30000) recentFloodMap.delete(k);
+      }
+    }
+  }
 
   const item = {
     id: data.id || ('id_' + Date.now()),
@@ -599,10 +630,12 @@ app.whenReady().then(() => {
   });
   ipcMain.handle('add-app', (event, newApp) => {
     if (!newApp || !newApp.topic) return { success: false, error: 'Topic is required' };
+    const cleanTopic = sanitizeTopic(newApp.topic);
+    if (!cleanTopic) return { success: false, error: 'Valid topic name required' };
     const appItem = {
       id: 'app-' + Date.now(),
       name: (newApp.name && newApp.name.trim()) ? newApp.name.trim() : 'Web App ' + ((appConfig.apps?.length || 0) + 1),
-      topic: newApp.topic.trim(),
+      topic: cleanTopic,
       serverUrl: newApp.serverUrl?.trim() || appConfig.serverUrl || 'https://ntfy.sh',
       token: newApp.token?.trim() || ''
     };
@@ -632,6 +665,27 @@ app.whenReady().then(() => {
       return { success: true };
     }
     return { success: false, error: 'App not found' };
+  });
+
+  ipcMain.handle('get-autostart', () => {
+    try {
+      return app.getLoginItemSettings().openAtLogin;
+    } catch (e) {
+      return false;
+    }
+  });
+
+  ipcMain.handle('set-autostart', (event, enable) => {
+    try {
+      app.setLoginItemSettings({
+        openAtLogin: !!enable,
+        openAsHidden: true
+      });
+      return app.getLoginItemSettings().openAtLogin;
+    } catch (e) {
+      console.error('Error setting autostart:', e);
+      return false;
+    }
   });
 
   ipcMain.handle('open-external', (event, url) => {

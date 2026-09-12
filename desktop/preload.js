@@ -11,6 +11,8 @@ contextBridge.exposeInMainWorld('notifyPushApi', {
   deleteApp: (id) => ipcRenderer.invoke('delete-app', id),
   testApp: (id) => ipcRenderer.invoke('test-app-alert', id),
   openExternal: (url) => ipcRenderer.invoke('open-external', url),
+  getAutoStart: () => ipcRenderer.invoke('get-autostart'),
+  setAutoStart: (enable) => ipcRenderer.invoke('set-autostart', enable),
   onNotification: (callback) => {
     ipcRenderer.on('new-notification', (event, data) => callback(data));
   },

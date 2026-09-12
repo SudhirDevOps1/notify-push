@@ -117,6 +117,12 @@
             Enable Notification Sound
           </label>
         </div>
+        <div class="checkbox-group">
+          <label>
+            <input type="checkbox" id="checkAutoStart" />
+            Launch Automatically on Windows Startup (System Tray)
+          </label>
+        </div>
         <div class="form-actions">
           <button type="submit" class="btn-primary">Save Server Settings</button>
         </div>
@@ -133,6 +139,11 @@
         <div class="search-wrap">
           <input type="text" id="inputSearch" placeholder="Search alerts..." />
         </div>
+      </div>
+
+      <!-- App Filter Chips -->
+      <div class="filter-chips-bar" id="historyFilterChips">
+        <button class="filter-chip active" data-app-filter="all">All Apps</button>
       </div>
 
       <!-- Feed Container -->

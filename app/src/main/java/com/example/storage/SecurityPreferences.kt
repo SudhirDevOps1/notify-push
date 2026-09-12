@@ -100,7 +100,7 @@ class SecurityPreferences(context: Context) {
 
     private fun saveChannelAppsInternal(apps: List<ChannelApp>) {
         val json = ChannelApp.listToJson(apps)
-        val combinedTopics = apps.map { it.topic.trim() }.filter { it.isNotBlank() }.distinct().joinToString(",")
+        val combinedTopics = apps.map { sanitizeTopic(it.topic) }.filter { it.isNotBlank() }.distinct().joinToString(",")
         prefs.edit()
             .putString(KEY_CHANNEL_APPS, json)
             .putString(KEY_TOPIC, combinedTopics)
@@ -162,6 +162,13 @@ class SecurityPreferences(context: Context) {
     }
 
     companion object {
+        fun sanitizeTopic(raw: String): String {
+            return raw.trim()
+                .lowercase()
+                .replace(Regex("[^a-z0-9_-]"), "-")
+                .replace(Regex("-+"), "-")
+                .trim('-')
+        }
         private const val TAG = "SecurityPreferences"
         private const val PREFS_FILE_NAME = "notifypush_secure_prefs"
         const val DEFAULT_SERVER_URL = "https://ntfy.sh"
