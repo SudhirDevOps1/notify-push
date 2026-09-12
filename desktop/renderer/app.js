@@ -52,10 +52,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     btnToggleConfig.textContent = 'Edit';
   });
 
-  // 2. Status Updates
-  window.notifyPushApi.onStatusChange((status) => {
+  // Helper to update status UI
+  function applyStatus(status) {
     statusText.textContent = status;
-    const isConnected = status.toLowerCase().includes('connected');
+    const isConnected = status.toLowerCase().includes('connected') || status.toLowerCase().includes('listening');
     const isError = status.toLowerCase().includes('error');
 
     statusDot.className = 'status-dot';
@@ -67,7 +67,20 @@ document.addEventListener('DOMContentLoaded', async () => {
       statusDot.classList.add('error');
       statusCard.classList.add('error');
     }
+  }
+
+  // 2. Status Updates
+  window.notifyPushApi.onStatusChange((status) => {
+    applyStatus(status);
   });
+
+  // Query initial status on load
+  try {
+    const currentStatus = await window.notifyPushApi.getStatus();
+    if (currentStatus) {
+      applyStatus(currentStatus);
+    }
+  } catch (e) {}
 
   // 3. Render Notifications
   function renderFeed(items) {

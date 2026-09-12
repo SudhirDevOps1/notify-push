@@ -2,6 +2,7 @@ const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('notifyPushApi', {
   getConfig: () => ipcRenderer.invoke('get-config'),
+  getStatus: () => ipcRenderer.invoke('get-status'),
   saveConfig: (config) => ipcRenderer.invoke('save-config', config),
   getHistory: () => ipcRenderer.invoke('get-history'),
   clearHistory: () => ipcRenderer.invoke('clear-history'),

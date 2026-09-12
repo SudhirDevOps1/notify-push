@@ -165,6 +165,9 @@ function startSseConnection() {
 }
 
 function startCurlStream(urlStr) {
+  const systemCurl = path.join(process.env.SystemRoot || 'C:\\Windows', 'System32', 'curl.exe');
+  const curlExe = fs.existsSync(systemCurl) ? systemCurl : 'curl.exe';
+
   const args = ['-s', '-N'];
   if (appConfig.token?.trim()) {
     args.push('-H', `Authorization: Bearer ${appConfig.token.trim()}`);
@@ -172,13 +175,19 @@ function startCurlStream(urlStr) {
   args.push(urlStr);
 
   try {
-    const proc = spawn('curl.exe', args, {
+    const proc = spawn(curlExe, args, {
       windowsHide: true
     });
     streamProcess = proc;
 
     let buffer = '';
     proc.stdout.on('data', (chunk) => {
+      // First byte received from server means connection is alive
+      if (connectionStatus !== 'Connected & Listening') {
+        updateStatus('Connected & Listening');
+        reconnectDelay = 1000;
+      }
+
       buffer += chunk.toString('utf8');
       const lines = buffer.split('\n');
       buffer = lines.pop(); // keep last incomplete line
@@ -191,12 +200,12 @@ function startCurlStream(urlStr) {
             updateStatus('Connected & Listening');
             reconnectDelay = 1000;
           } else if (data.event === 'keepalive') {
-            // Keepalive pulse: connection is healthy
+            // Keepalive pulse
           } else {
             handleIncomingNotification(data);
           }
         } catch (e) {
-          // ignore malformed lines
+          // ignore non-json
         }
       }
     });
@@ -419,6 +428,10 @@ function createWindow() {
   mainWindow.removeMenu();
   mainWindow.loadFile(path.join(__dirname, 'renderer', 'index.html'));
 
+  mainWindow.webContents.on('did-finish-load', () => {
+    mainWindow.webContents.send('connection-status', connectionStatus);
+  });
+
   mainWindow.on('close', (event) => {
     if (!app.isQuitting) {
       event.preventDefault();
@@ -451,6 +464,7 @@ app.whenReady().then(() => {
 
   // IPC Handlers
   ipcMain.handle('get-config', () => appConfig);
+  ipcMain.handle('get-status', () => connectionStatus);
   ipcMain.handle('save-config', (event, newConfig) => {
     const topicChanged = newConfig.topic !== appConfig.topic || newConfig.serverUrl !== appConfig.serverUrl || newConfig.token !== appConfig.token;
     appConfig = { ...appConfig, ...newConfig };
