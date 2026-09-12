@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "notifypush"
 version = "1.0.0"
 authors = [
-  { name="SudhirDevOps1", email="singhjgh30@gmail.com" },
+  { name="SudhirDevOps1" },
 ]
 description = "Universal, zero-dependency push notification client for NotifyPush and ntfy.sh"
 readme = "README.md"

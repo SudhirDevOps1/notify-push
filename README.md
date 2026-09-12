@@ -335,4 +335,4 @@ Contributions, bug reports, and PRs are warmly welcome! Please review:
 - [Security Policy](SECURITY.md)
 
 **License:** This project is licensed under the [MIT License](LICENSE).  
-Created and maintained with ❤️ by **[SudhirDevOps1](https://github.com/SudhirDevOps1)** (`singhjgh30@gmail.com`).
+Created and maintained with ❤️ by **[SudhirDevOps1](https://github.com/SudhirDevOps1)**.

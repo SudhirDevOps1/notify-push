@@ -4,7 +4,7 @@
   "version": "1.0.1",
   "description": "Lightweight, Privacy-First Push Notification Receiver & System Tray Client",
   "main": "main.js",
-  "author": "SudhirDevOps1 <singhjgh30@gmail.com>",
+  "author": "SudhirDevOps1",
   "license": "MIT",
   "scripts": {
     "start": "electron .",

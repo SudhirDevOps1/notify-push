@@ -334,5 +334,5 @@ Lagbhag **150ms se 500ms** (aadhe second se bhi kam), kyunki yeh real-time persi
 ## 🤝 Contribution & License
 
 - **License**: MIT License
-- **Author**: SudhirDevOps1 (<singhjgh30@gmail.com>)
+- **Author**: [SudhirDevOps1](https://github.com/SudhirDevOps1)
 - **Repository**: [https://github.com/SudhirDevOps1/notify-push](https://github.com/SudhirDevOps1/notify-push)
