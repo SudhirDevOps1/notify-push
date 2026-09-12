@@ -6,10 +6,19 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const btnToggleConfig = document.getElementById('btnToggleConfig');
   const configForm = document.getElementById('configForm');
-  const inputTopic = document.getElementById('inputTopic');
   const inputServer = document.getElementById('inputServer');
   const inputToken = document.getElementById('inputToken');
   const checkSound = document.getElementById('checkSound');
+
+  const appsCountBadge = document.getElementById('appsCountBadge');
+  const appsList = document.getElementById('appsList');
+  const btnShowAddApp = document.getElementById('btnShowAddApp');
+  const formAddApp = document.getElementById('formAddApp');
+  const inputNewAppName = document.getElementById('inputNewAppName');
+  const inputNewAppTopic = document.getElementById('inputNewAppTopic');
+  const btnGenRandomTopic = document.getElementById('btnGenRandomTopic');
+  const btnCancelAddApp = document.getElementById('btnCancelAddApp');
+  const btnCancelAddApp2 = document.getElementById('btnCancelAddApp2');
 
   const notificationList = document.getElementById('notificationList');
   const emptyState = document.getElementById('emptyState');
@@ -23,39 +32,162 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const modalWebSnippet = document.getElementById('modalWebSnippet');
   const btnCloseModal = document.getElementById('btnCloseModal');
+  const selectSnippetApp = document.getElementById('selectSnippetApp');
   const snippetPreview = document.getElementById('snippetPreview');
   const btnCopyWebSnippet = document.getElementById('btnCopyWebSnippet');
 
   let allNotifications = [];
+  let currentConfig = await window.notifyPushApi.getConfig();
 
-  // 1. Load Initial Configuration
-  const config = await window.notifyPushApi.getConfig();
-  inputTopic.value = config.topic || '';
-  inputServer.value = config.serverUrl || 'https://ntfy.sh';
-  inputToken.value = config.token || '';
-  checkSound.checked = config.sound !== false;
-  statusTopic.textContent = `Topic: ${config.topic || '--'}`;
+  // 1. Render Configured Apps
+  function renderApps(apps) {
+    appsList.innerHTML = '';
+    selectSnippetApp.innerHTML = '';
 
-  // Toggle Config Form
-  btnToggleConfig.addEventListener('click', () => {
-    configForm.classList.toggle('collapsed');
-    btnToggleConfig.textContent = configForm.classList.contains('collapsed') ? 'Edit' : 'Close';
+    const appItems = Array.isArray(apps) ? apps : [];
+    appsCountBadge.textContent = `${appItems.length} ${appItems.length === 1 ? 'App' : 'Apps'}`;
+
+    const activeTopics = appItems.map(a => a.topic).join(', ');
+    statusTopic.textContent = `Topics: ${activeTopics || '--'}`;
+
+    if (appItems.length === 0) {
+      appsList.innerHTML = `
+        <div style="text-align: center; padding: 12px; color: var(--text-muted); font-size: 12px;">
+          No web apps configured yet. Click <strong>+ Add Web App</strong> to create your first channel!
+        </div>
+      `;
+      return;
+    }
+
+    appItems.forEach(app => {
+      // Add to Apps List UI
+      const card = document.createElement('div');
+      card.className = 'app-item-card';
+      card.innerHTML = `
+        <div class="app-item-left">
+          <div class="app-item-title">
+            <span>🌐</span>
+            <strong>${escapeHtml(app.name)}</strong>
+          </div>
+          <span class="app-item-topic">#${escapeHtml(app.topic)}</span>
+        </div>
+        <div class="app-item-actions">
+          <button class="app-action-btn btn-app-code" title="Copy Website Snippet for this App" data-id="${app.id}">
+            📋 Code
+          </button>
+          <button class="app-action-btn btn-app-test" title="Send Live Test to this App" data-id="${app.id}">
+            🔔 Test
+          </button>
+          <button class="app-action-btn delete btn-app-delete" title="Delete App" data-id="${app.id}">
+            🗑️
+          </button>
+        </div>
+      `;
+      appsList.appendChild(card);
+
+      // Add to Snippet Modal Dropdown
+      const option = document.createElement('option');
+      option.value = app.id;
+      option.textContent = `${app.name} (#${app.topic})`;
+      selectSnippetApp.appendChild(option);
+    });
+
+    // Wire action buttons
+    appsList.querySelectorAll('.btn-app-code').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.getAttribute('data-id');
+        selectSnippetApp.value = id;
+        updateSnippetPreview();
+        modalWebSnippet.classList.add('open', 'active');
+      });
+    });
+
+    appsList.querySelectorAll('.btn-app-test').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id = btn.getAttribute('data-id');
+        btn.textContent = '⏳ Sending...';
+        await window.notifyPushApi.testApp(id);
+        btn.textContent = '✅ Sent!';
+        setTimeout(() => { btn.textContent = '🔔 Test'; }, 1500);
+      });
+    });
+
+    appsList.querySelectorAll('.btn-app-delete').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id = btn.getAttribute('data-id');
+        const targetApp = appItems.find(a => a.id === id);
+        const name = targetApp ? targetApp.name : 'this app';
+        if (confirm(`Are you sure you want to remove "${name}"?`)) {
+          const res = await window.notifyPushApi.deleteApp(id);
+          if (res && res.apps) {
+            currentConfig.apps = res.apps;
+            renderApps(res.apps);
+          }
+        }
+      });
+    });
+  }
+
+  renderApps(currentConfig.apps || []);
+
+  // Form: Add New Web App
+  btnShowAddApp.addEventListener('click', () => {
+    formAddApp.classList.toggle('collapsed');
+    if (!formAddApp.classList.contains('collapsed')) {
+      inputNewAppName.focus();
+      if (!inputNewAppTopic.value) {
+        inputNewAppTopic.value = 'app-' + Math.random().toString(36).substring(2, 9);
+      }
+    }
   });
 
-  // Save Configuration
+  function hideAddAppForm() {
+    formAddApp.classList.add('collapsed');
+    inputNewAppName.value = '';
+    inputNewAppTopic.value = '';
+  }
+
+  btnCancelAddApp.addEventListener('click', hideAddAppForm);
+  btnCancelAddApp2.addEventListener('click', hideAddAppForm);
+
+  btnGenRandomTopic.addEventListener('click', () => {
+    inputNewAppTopic.value = 'app-' + Math.random().toString(36).substring(2, 9);
+  });
+
+  formAddApp.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const name = inputNewAppName.value.trim();
+    const topic = inputNewAppTopic.value.trim();
+    if (!topic) return;
+
+    const res = await window.notifyPushApi.addApp({ name, topic });
+    if (res && res.success) {
+      currentConfig.apps = res.apps;
+      renderApps(res.apps);
+      hideAddAppForm();
+    }
+  });
+
+  // Global Settings Form
+  inputServer.value = currentConfig.serverUrl || 'https://ntfy.sh';
+  inputToken.value = currentConfig.token || '';
+  checkSound.checked = currentConfig.sound !== false;
+
+  btnToggleConfig.addEventListener('click', () => {
+    configForm.classList.toggle('collapsed');
+    btnToggleConfig.textContent = configForm.classList.contains('collapsed') ? 'Server Settings' : 'Close';
+  });
+
   configForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const newConfig = {
-      topic: inputTopic.value.trim(),
-      serverUrl: inputServer.value.trim() || 'https://ntfy.sh',
-      token: inputToken.value.trim(),
-      sound: checkSound.checked
-    };
+    currentConfig.serverUrl = inputServer.value.trim() || 'https://ntfy.sh';
+    currentConfig.token = inputToken.value.trim();
+    currentConfig.sound = checkSound.checked;
 
-    await window.notifyPushApi.saveConfig(newConfig);
-    statusTopic.textContent = `Topic: ${newConfig.topic || '--'}`;
+    await window.notifyPushApi.saveConfig(currentConfig);
     configForm.classList.add('collapsed');
-    btnToggleConfig.textContent = 'Edit';
+    btnToggleConfig.textContent = 'Server Settings';
+    alert('Server settings saved successfully!');
   });
 
   // Helper to update status UI
@@ -121,7 +253,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         linkHtml = `<a class="notif-link" data-url="${escapeHtml(item.clickUrl)}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -1px; margin-right: 4px;"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>Open Link</a>`;
       }
 
-      const topicBadgeHtml = item.topic ? `
+      const displaySource = item.appName ? `${item.appName} (#${item.topic})` : (item.topic ? `#${item.topic}` : '');
+      const topicBadgeHtml = displaySource ? `
         <span class="notif-topic">
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -1px; margin-right: 3px;">
             <path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9"></path>
@@ -129,7 +262,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             <circle cx="12" cy="12" r="2"></circle>
             <path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.5"></path>
             <path d="M19.1 4.9C23 8.8 23 15.2 19.1 19.1"></path>
-          </svg>${escapeHtml(item.topic)}
+          </svg>${escapeHtml(displaySource)}
         </span>` : '';
 
       card.innerHTML = `
@@ -190,7 +323,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       (n.title && n.title.toLowerCase().includes(query)) ||
       (n.message && n.message.toLowerCase().includes(query)) ||
       (n.tags && n.tags.some(t => t.toLowerCase().includes(query))) ||
-      (n.topic && n.topic.toLowerCase().includes(query))
+      (n.topic && n.topic.toLowerCase().includes(query)) ||
+      (n.appName && n.appName.toLowerCase().includes(query))
     );
     renderFeed(filtered);
   }
@@ -221,32 +355,38 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   // 8. Web Integration Snippet Modal
-  function getSnippetCode() {
-    const activeServer = inputServer.value.trim() || 'https://ntfy.sh';
-    const firstTopic = (inputTopic.value || 'my-website').split(',')[0].trim() || 'my-website';
-    const activeToken = inputToken.value.trim();
+  function updateSnippetPreview() {
+    const selectedAppId = selectSnippetApp.value;
+    const targetApp = currentConfig.apps?.find(a => a.id === selectedAppId) || currentConfig.apps?.[0];
+    const activeServer = (targetApp?.serverUrl || currentConfig.serverUrl || 'https://ntfy.sh').trim();
+    const activeTopic = (targetApp?.topic || 'my-website').trim();
+    const activeToken = (targetApp?.token || currentConfig.token || '').trim();
+    const appName = targetApp?.name || 'Website';
 
-    return `&lt;!-- 1. Include NotifyPush Client --&gt;
+    const code = `&lt;!-- 1. Include NotifyPush Client --&gt;
 &lt;script src="https://cdn.jsdelivr.net/gh/SudhirDevOps1/notify-push@main/web/notifypush.js"&gt;&lt;/script&gt;
 &lt;script&gt;
-  // 2. Initialize with your website topic
+  // 2. Initialize for: ${escapeHtml(appName)}
   const notify = new NotifyPush({
     serverUrl: '${activeServer}',
-    topic: '${firstTopic}'${activeToken ? `,\n    token: '${activeToken}'` : ''}
+    topic: '${activeTopic}'${activeToken ? `,\n    token: '${activeToken}'` : ''}
   });
 
   // 3. Send alerts anytime!
   notify.send({
     title: 'New Lead / Order Received! 🚀',
-    message: 'A user submitted the contact form on your website.',
+    message: 'A user submitted the contact form on ${escapeHtml(appName)}.',
     priority: 'high',
     tags: ['globe', 'cart']
   });
 &lt;/script&gt;`;
+    snippetPreview.innerHTML = code;
   }
 
+  selectSnippetApp.addEventListener('change', updateSnippetPreview);
+
   btnWebSnippet.addEventListener('click', () => {
-    snippetPreview.innerHTML = getSnippetCode();
+    updateSnippetPreview();
     modalWebSnippet.classList.add('open', 'active');
   });
 

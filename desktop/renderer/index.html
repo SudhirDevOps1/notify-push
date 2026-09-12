@@ -57,20 +57,54 @@
       <div class="status-topic" id="statusTopic">Topic: --</div>
     </div>
 
-    <!-- Configuration Card -->
+    <!-- Apps & Channels Card -->
     <section class="config-card">
       <div class="card-header">
-        <h3>Connection Settings</h3>
-        <button id="btnToggleConfig" class="text-btn">Edit</button>
-      </div>
-      <form id="configForm" class="config-form collapsed">
-        <div class="input-group">
-          <label for="inputTopic">Subscribed Topics / Apps *</label>
-          <input type="text" id="inputTopic" placeholder="e.g. store-alerts, web-leads, server-bot" required autocomplete="off" />
-          <small class="input-hint">Tip: Separate multiple topics with commas to receive alerts from multiple websites & apps!</small>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <h3>Web Apps & Channels</h3>
+          <span class="badge-count-sm" id="appsCountBadge">1 App</span>
         </div>
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <button type="button" id="btnShowAddApp" class="btn-primary-sm">+ Add Web App</button>
+          <button type="button" id="btnToggleConfig" class="text-btn">Server Settings</button>
+        </div>
+      </div>
+
+      <!-- Add New Web App Form (Collapsible) -->
+      <form id="formAddApp" class="add-app-form collapsed">
+        <div class="form-title">
+          <span>Create New Web App / Website</span>
+          <button type="button" id="btnCancelAddApp" class="close-btn-sm">&times;</button>
+        </div>
+        <div class="input-row">
+          <div class="input-group" style="flex: 1.2;">
+            <label for="inputNewAppName">Web App / Site Name *</label>
+            <input type="text" id="inputNewAppName" placeholder="e.g. My Online Store, Portfolio Form" required />
+          </div>
+          <div class="input-group" style="flex: 1.4;">
+            <label for="inputNewAppTopic">Topic Name / ID *</label>
+            <div class="input-with-button">
+              <input type="text" id="inputNewAppTopic" placeholder="e.g. store-leads-9821" required />
+              <button type="button" id="btnGenRandomTopic" class="btn-inside-icon" title="Generate Random Topic">🎲</button>
+            </div>
+          </div>
+        </div>
+        <div class="add-app-actions">
+          <button type="submit" class="btn-primary-sm">Save & Listen</button>
+          <button type="button" id="btnCancelAddApp2" class="btn-secondary-sm">Cancel</button>
+        </div>
+      </form>
+
+      <!-- Apps List -->
+      <div class="apps-list" id="appsList">
+        <!-- Rendered dynamically -->
+      </div>
+
+      <!-- Advanced Server Settings (Collapsible) -->
+      <form id="configForm" class="config-form collapsed">
+        <div class="settings-divider"><span>Default Server & Sound</span></div>
         <div class="input-group">
-          <label for="inputServer">Server URL</label>
+          <label for="inputServer">Default Server URL</label>
           <input type="url" id="inputServer" placeholder="https://ntfy.sh" value="https://ntfy.sh" />
         </div>
         <div class="input-group">
@@ -84,7 +118,7 @@
           </label>
         </div>
         <div class="form-actions">
-          <button type="submit" class="btn-primary">Save & Connect</button>
+          <button type="submit" class="btn-primary">Save Server Settings</button>
         </div>
       </form>
     </section>
@@ -131,7 +165,11 @@
         </div>
         <button id="btnCloseModal" class="close-btn">&times;</button>
       </div>
-      <p class="modal-desc">Add this snippet into any HTML page, React, or WordPress site to send push alerts directly to your devices:</p>
+      <p class="modal-desc">Select which Web App you want to generate the push alert snippet for:</p>
+      <div class="input-group" style="margin-bottom: 12px;">
+        <label for="selectSnippetApp">Target Web App</label>
+        <select id="selectSnippetApp" class="app-select"></select>
+      </div>
       <div class="code-box">
         <pre><code id="snippetPreview"></code></pre>
         <button id="btnCopyWebSnippet" class="btn-copy">📋 Copy HTML Code</button>

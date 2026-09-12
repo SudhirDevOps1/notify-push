@@ -7,6 +7,9 @@ contextBridge.exposeInMainWorld('notifyPushApi', {
   getHistory: () => ipcRenderer.invoke('get-history'),
   clearHistory: () => ipcRenderer.invoke('clear-history'),
   testAlert: () => ipcRenderer.invoke('send-test-alert'),
+  addApp: (app) => ipcRenderer.invoke('add-app', app),
+  deleteApp: (id) => ipcRenderer.invoke('delete-app', id),
+  testApp: (id) => ipcRenderer.invoke('test-app-alert', id),
   openExternal: (url) => ipcRenderer.invoke('open-external', url),
   onNotification: (callback) => {
     ipcRenderer.on('new-notification', (event, data) => callback(data));

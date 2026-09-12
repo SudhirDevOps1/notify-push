@@ -33,19 +33,46 @@ const configPath = path.join(app.getPath('userData'), 'config.json');
 const historyPath = path.join(app.getPath('userData'), 'history.json');
 
 function loadConfig() {
+  let cfg = {
+    serverUrl: 'https://ntfy.sh',
+    topic: '',
+    token: '',
+    sound: true,
+    apps: []
+  };
   try {
     if (fs.existsSync(configPath)) {
-      return JSON.parse(fs.readFileSync(configPath, 'utf8'));
+      cfg = Object.assign(cfg, JSON.parse(fs.readFileSync(configPath, 'utf8')));
     }
   } catch (err) {
     console.error('Error loading config:', err);
   }
-  return {
-    serverUrl: 'https://ntfy.sh',
-    topic: 'desktop-alerts-' + Math.floor(1000 + Math.random() * 9000),
-    token: '',
-    sound: true
-  };
+
+  // Ensure apps array exists and migrate legacy single/comma topic string
+  if (!Array.isArray(cfg.apps) || cfg.apps.length === 0) {
+    const rawTopics = String(cfg.topic || '').split(',').map(t => t.trim()).filter(Boolean);
+    if (rawTopics.length > 0) {
+      cfg.apps = rawTopics.map((t, idx) => ({
+        id: 'app-' + (Date.now() + idx),
+        name: rawTopics.length === 1 ? 'Primary Web App' : `Web App ${idx + 1}`,
+        topic: t,
+        serverUrl: cfg.serverUrl || 'https://ntfy.sh',
+        token: cfg.token || ''
+      }));
+    } else {
+      const defaultTopic = 'desktop-alerts-' + Math.floor(1000 + Math.random() * 9000);
+      cfg.apps = [{
+        id: 'app-' + Date.now(),
+        name: 'Default Web App',
+        topic: defaultTopic,
+        serverUrl: cfg.serverUrl || 'https://ntfy.sh',
+        token: ''
+      }];
+    }
+    cfg.topic = cfg.apps.map(a => a.topic).join(',');
+    saveConfigData(cfg);
+  }
+  return cfg;
 }
 
 function saveConfigData(cfg) {
@@ -88,6 +115,7 @@ function updateStatus(status) {
 
 function updateTrayMenu() {
   if (!tray) return;
+  const activeAppsCount = Array.isArray(appConfig.apps) ? appConfig.apps.length : 0;
   const contextMenu = Menu.buildFromTemplate([
     {
       label: 'Open NotifyPush',
@@ -100,7 +128,7 @@ function updateTrayMenu() {
     },
     { type: 'separator' },
     {
-      label: `Topic: ${appConfig.topic || '(None)'}`,
+      label: `Configured Apps: ${activeAppsCount}`,
       enabled: false
     },
     {
@@ -139,13 +167,18 @@ function stopActiveStream() {
 }
 
 function getTopics() {
-  if (Array.isArray(appConfig.topics) && appConfig.topics.length > 0) {
-    return appConfig.topics.map(t => String(t).trim()).filter(Boolean);
+  if (Array.isArray(appConfig.apps) && appConfig.apps.length > 0) {
+    return appConfig.apps.map(a => String(a.topic).trim()).filter(Boolean);
   }
   if (appConfig.topic) {
     return String(appConfig.topic).split(',').map(t => t.trim()).filter(Boolean);
   }
   return [];
+}
+
+function getAppByTopic(topic) {
+  if (!topic || !Array.isArray(appConfig.apps)) return null;
+  return appConfig.apps.find(a => a.topic && a.topic.trim().toLowerCase() === topic.trim().toLowerCase());
 }
 
 function startSseConnection() {
@@ -340,6 +373,8 @@ function handleIncomingNotification(data) {
 
   const topics = getTopics();
   const itemTopic = data.topic || (topics.length > 0 ? topics[0] : '');
+  const matchedApp = getAppByTopic(itemTopic);
+  const appName = matchedApp ? matchedApp.name : itemTopic;
 
   const item = {
     id: data.id || ('id_' + Date.now()),
@@ -347,6 +382,7 @@ function handleIncomingNotification(data) {
     title,
     message,
     topic: itemTopic,
+    appName,
     priority,
     tags,
     clickUrl,
@@ -365,11 +401,12 @@ function handleIncomingNotification(data) {
 
   // Windows Native Toast Notification (Shows which app/topic sent it)
   if (Notification.isSupported()) {
-    const toastTitle = item.topic ? `[${item.topic}] ${item.title}` : item.title;
+    const toastPrefix = appName ? `[${appName}] ` : (item.topic ? `[${item.topic}] ` : '');
+    const toastTitle = `${toastPrefix}${item.title}`;
     const notif = new Notification({
       title: toastTitle,
       body: item.message,
-      icon: path.join(__dirname, 'assets', 'icon.png'),
+      icon: process.platform === 'win32' ? path.join(__dirname, 'assets', 'icon.ico') : path.join(__dirname, 'assets', 'icon.png'),
       silent: !appConfig.sound
     });
 
@@ -383,6 +420,37 @@ function handleIncomingNotification(data) {
     });
 
     notif.show();
+  }
+}
+
+function sendAppTestAlert(targetApp) {
+  if (!targetApp || !targetApp.topic) return;
+  let server = (targetApp.serverUrl || appConfig.serverUrl || 'https://ntfy.sh').replace(/\/+$/, '');
+  const url = `${server}/${encodeURIComponent(targetApp.topic)}`;
+
+  const systemCurl = path.join(process.env.SystemRoot || 'C:\\Windows', 'System32', 'curl.exe');
+  const curlExe = fs.existsSync(systemCurl) ? systemCurl : 'curl.exe';
+
+  const curlArgs = [
+    '-s',
+    '-X', 'POST',
+    url,
+    '-H', `Title: [${targetApp.name}] Live Alert 🔔`,
+    '-H', 'Priority: high',
+    '-H', 'Tags: tada,white_check_mark',
+    '-d', `Push alert for ${targetApp.name} is working perfectly!`
+  ];
+  if (targetApp.token?.trim() || appConfig.token?.trim()) {
+    curlArgs.push('-H', `Authorization: Bearer ${(targetApp.token || appConfig.token).trim()}`);
+  }
+
+  try {
+    const p = spawn(curlExe, curlArgs, { windowsHide: true });
+    p.on('error', () => {
+      sendTestAlertFallback(url);
+    });
+  } catch (err) {
+    sendTestAlertFallback(url);
   }
 }
 
@@ -529,6 +597,43 @@ app.whenReady().then(() => {
     sendTestAlert();
     return { success: true };
   });
+  ipcMain.handle('add-app', (event, newApp) => {
+    if (!newApp || !newApp.topic) return { success: false, error: 'Topic is required' };
+    const appItem = {
+      id: 'app-' + Date.now(),
+      name: (newApp.name && newApp.name.trim()) ? newApp.name.trim() : 'Web App ' + ((appConfig.apps?.length || 0) + 1),
+      topic: newApp.topic.trim(),
+      serverUrl: newApp.serverUrl?.trim() || appConfig.serverUrl || 'https://ntfy.sh',
+      token: newApp.token?.trim() || ''
+    };
+    if (!Array.isArray(appConfig.apps)) appConfig.apps = [];
+    appConfig.apps.push(appItem);
+    appConfig.topic = appConfig.apps.map(a => a.topic).join(',');
+    saveConfigData(appConfig);
+    updateTrayMenu();
+    startSseConnection();
+    return { success: true, app: appItem, apps: appConfig.apps };
+  });
+
+  ipcMain.handle('delete-app', (event, appId) => {
+    if (!Array.isArray(appConfig.apps)) return { success: false };
+    appConfig.apps = appConfig.apps.filter(a => a.id !== appId);
+    appConfig.topic = appConfig.apps.map(a => a.topic).join(',');
+    saveConfigData(appConfig);
+    updateTrayMenu();
+    startSseConnection();
+    return { success: true, apps: appConfig.apps };
+  });
+
+  ipcMain.handle('test-app-alert', (event, appId) => {
+    const targetApp = appConfig.apps?.find(a => a.id === appId);
+    if (targetApp) {
+      sendAppTestAlert(targetApp);
+      return { success: true };
+    }
+    return { success: false, error: 'App not found' };
+  });
+
   ipcMain.handle('open-external', (event, url) => {
     if (url && (url.startsWith('http://') || url.startsWith('https://'))) {
       shell.openExternal(url);
