@@ -41,10 +41,13 @@
    - [Camera QR Code Scanner](#instant-qr-code-scanner)
    - [24/7 Resilient Daemon Service](#247-resilient-background-daemon)
    - [Battery Optimization Setup](#battery-optimization-setup)
-6. [Self-Hosting with Docker](#-self-hosting-with-docker)
-7. [Security & End-to-End Encryption](#-security--end-to-end-encryption)
-8. [Documentation Index](#-documentation-index)
-9. [Contributing & License](#-contributing--license)
+6. [Desktop Application (Windows .exe)](#-desktop-application-windows-exe)
+   - [Native Windows Toasts & Tray Daemon](#native-windows-toasts--tray-daemon)
+   - [Standalone Portable .exe](#standalone-portable-exe)
+7. [Self-Hosting with Docker](#-self-hosting-with-docker)
+8. [Security & End-to-End Encryption](#-security--end-to-end-encryption)
+9. [Documentation Index](#-documentation-index)
+10. [Contributing & License](#-contributing--license)
 
 ---
 
@@ -252,6 +255,28 @@ The app operates an official Android Foreground Service (`NotificationListenerSe
 To prevent aggressive OEM battery managers (MIUI, OneUI, ColorOS) from sleeping the background stream:
 1. Tap the **"Enable 24/7 Background Delivery"** card inside the app.
 2. Select **"Unrestricted / No Restrictions"** in Android Battery Settings.
+
+---
+
+## 💻 Desktop Application (Windows .exe)
+[![Windows](https://img.shields.io/badge/Windows-10%20%7C%2011-0078D6?style=flat-square&logo=windows&logoColor=white)](https://microsoft.com/windows)
+[![Electron](https://img.shields.io/badge/Electron-34-47848F?style=flat-square&logo=electron&logoColor=white)](https://electronjs.org/)
+
+*Deep Dive & Source:* **[`desktop/README.md`](desktop/README.md)**
+
+NotifyPush includes a dedicated, lightweight 24/7 background Windows desktop application packaged as a single-file portable executable (`.exe`).
+
+### Native Windows Toasts & Tray Daemon
+- 🔔 **Windows 10/11 Toasts**: Rich native action toast notifications with sound alerts, priority tags, and clickable direct action buttons.
+- 🔕 **System Tray Resident**: Closing the window (`✕`) minimizes directly to the Windows system tray; continues receiving push alerts with minimal RAM usage.
+- 📡 **Real-time SSE Stream**: Direct low-latency connection to `ntfy.sh` or your self-hosted server without third-party brokers.
+- 📜 **Local Search & History**: Saves alerts to `%APPDATA%/NotifyPush/history.json` with instant search and one-click JSON export.
+
+### Standalone Portable .exe
+No installation required — grab the single-file portable executable from:
+```text
+desktop/dist/NotifyPush-Windows-1.0.1.exe
+```
 
 ---
 

@@ -22,18 +22,19 @@
 1. [NotifyPush Kya Hai aur Yeh Kaise Kaam Karta Hai?](#1-notifypush-kya-hai-aur-yeh-kaise-kaam-karta-hai)
 2. [Firebase/OneSignal Se Behtar Kyun Hai?](#2-firebaseonesignal-se-behtar-kyun-hai)
 3. [Android App Setup (Step-by-Step)](#3-android-app-setup-step-by-step)
-4. [60 Seconds Quickstart (Sabse Aasan Tareeqa)](#4-60-seconds-quickstart-sabse-aasan-tareeqa)
-5. [Code Implementation (Apne Project Mein Kaise Lagayein)](#5-code-implementation-apne-project-mein-kaise-lagayein)
+4. [Windows Desktop App (.exe Setup)](#4-windows-desktop-app-exe-setup)
+5. [60 Seconds Quickstart (Sabse Aasan Tareeqa)](#5-60-seconds-quickstart-sabse-aasan-tareeqa)
+6. [Code Implementation (Apne Project Mein Kaise Lagayein)](#6-code-implementation-apne-project-mein-kaise-lagayein)
    - [Next.js / Node.js / TypeScript](#a-nextjs--nodejs--typescript)
    - [Python (FastAPI, Django, Flask, Automation)](#b-python-fastapi-django-flask)
    - [PHP (Laravel, Core PHP, WordPress)](#c-php-laravel-core-php)
    - [Go (Microservices)](#d-go-golang)
    - [cURL / Bash / Terminal Scripts](#e-curl--bash--terminal-scripts)
    - [GitHub Actions (CI/CD Alerts)](#f-github-actions-cicd-alerts)
-6. [Security: Topic Ko Secret & Private Kaise Banayein?](#6-security-topic-ko-secret--private-kaise-banayein)
-7. [Self-Hosting (Apna Private Docker Server)](#7-self-hosting-apna-private-docker-server)
-8. [24/7 Background Notification Delivery (Battery Settings)](#8-247-background-notification-delivery-battery-settings)
-9. [Aksar Pooche Jaane Wale Sawal (FAQs)](#9-aksar-pooche-jaane-wale-sawal-faqs)
+7. [Security: Topic Ko Secret & Private Kaise Banayein?](#7-security-topic-ko-secret--private-kaise-banayein)
+8. [Self-Hosting (Apna Private Docker Server)](#8-self-hosting-apna-private-docker-server)
+9. [24/7 Background Notification Delivery (Battery Settings)](#9-247-background-notification-delivery-battery-settings)
+10. [Aksar Pooche Jaane Wale Sawal (FAQs)](#10-aksar-pooche-jaane-wale-sawal-faqs)
 
 ---
 
@@ -93,7 +94,29 @@ Agar aap bar-bar type nahi karna chahte:
 
 ---
 
-## 4. 60 Seconds Quickstart (Sabse Aasan Tareeqa)
+## 4. Windows Desktop App (.exe Setup)
+
+<p align="center">
+  <img src="../desktop/assets/icon.png" alt="NotifyPush Desktop App Icon" width="80" height="80" />
+</p>
+
+NotifyPush ka ek lightweight **Windows Desktop App (.exe)** bhi tayyar hai jo bina kisi installation ke seedha chalta hai:
+
+### Features:
+- 🔔 **Native Windows 10/11 Toasts**: Jab bhi alert aayega, screen ke bottom-right me native toast aayegi sound aur direct link ke sath.
+- 🔕 **System Tray Background Daemon**: Window close (`✕`) karne par app band nahi hota, balki taskbar ke system tray me chala jata hai aur background me 24/7 listen karta rehta hai.
+- 📜 **Local Search & History**: Saare aane wale alerts PC par locally save hote hain, jise aap search ya JSON me export kar sakte hain.
+
+### Kaise Run Karein:
+Direct standalone executable run karein:
+```text
+desktop/dist/NotifyPush-Windows-1.0.1.exe
+```
+Bus double-click karein, topic name daalein aur **"Connect"** dabayein!
+
+---
+
+## 5. 60 Seconds Quickstart (Sabse Aasan Tareeqa)
 
 Apne computer ka Terminal kholein aur yeh command run karein (yahan `sudhir-alerts-9821` ki jagah apna topic daalein):
 
@@ -105,11 +128,11 @@ curl -X POST "https://ntfy.sh/sudhir-alerts-9821" \
   -d "NotifyPush setup successfully ho gaya hai!"
 ```
 
-**Result:** 1 second se bhi kam samay me aapke phone par notification pop ho jayega!
+**Result:** 1 second se bhi kam samay me aapke phone aur Windows desktop dono par notification pop ho jayega!
 
 ---
 
-## 5. Code Implementation (Apne Project Mein Kaise Lagayein)
+## 6. Code Implementation (Apne Project Mein Kaise Lagayein)
 
 ### A. Next.js / Node.js / TypeScript
 
@@ -253,7 +276,7 @@ Apne `.github/workflows/deploy.yml` me add karein:
 
 ---
 
-## 6. Security: Topic Ko Secret & Private Kaise Banayein?
+## 7. Security: Topic Ko Secret & Private Kaise Banayein?
 
 Agar aap public `ntfy.sh` server use kar rahe hain, toh koi bhi aam naam (jaise `test` ya `alerts`) na rakhein kyunki koi bhi usse sun sakta hai.
 
@@ -264,7 +287,7 @@ Agar aap public `ntfy.sh` server use kar rahe hain, toh koi bhi aam naam (jaise 
 
 ---
 
-## 7. Self-Hosting (Apna Private Docker Server)
+## 8. Self-Hosting (Apna Private Docker Server)
 
 Agar aap kisi third party server par bharosa nahi karna chahte, toh apne VPS par 2 minute me Docker run karein:
 
@@ -281,7 +304,7 @@ Aur mobile app me **Server URL** me `https://notify.yourdomain.com` set kar dein
 
 ---
 
-## 8. 24/7 Background Notification Delivery (Battery Settings)
+## 9. 24/7 Background Notification Delivery (Battery Settings)
 
 Kuch Android brands (Xiaomi, Samsung, OnePlus, Vivo) background apps ko kill kar dete hain battery bachane ke liye.
 
@@ -292,7 +315,7 @@ Kuch Android brands (Xiaomi, Samsung, OnePlus, Vivo) background apps ko kill kar
 
 ---
 
-## 9. Aksar Pooche Jaane Wale Sawal (FAQs)
+## 10. Aksar Pooche Jaane Wale Sawal (FAQs)
 
 #### Q1: Kya yeh service hamesha free rahegi?
 **Haan!** NotifyPush 100% open-source MIT licensed hai. Public ntfy instance bhi free hai, aur aap apna server bhi bina kisi charge ke chala sakte hain.

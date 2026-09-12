@@ -1,0 +1,188 @@
+document.addEventListener('DOMContentLoaded', async () => {
+  const statusCard = document.getElementById('statusCard');
+  const statusDot = document.getElementById('statusDot');
+  const statusText = document.getElementById('statusText');
+  const statusTopic = document.getElementById('statusTopic');
+
+  const btnToggleConfig = document.getElementById('btnToggleConfig');
+  const configForm = document.getElementById('configForm');
+  const inputTopic = document.getElementById('inputTopic');
+  const inputServer = document.getElementById('inputServer');
+  const inputToken = document.getElementById('inputToken');
+  const checkSound = document.getElementById('checkSound');
+
+  const notificationList = document.getElementById('notificationList');
+  const emptyState = document.getElementById('emptyState');
+  const badgeCount = document.getElementById('badgeCount');
+  const inputSearch = document.getElementById('inputSearch');
+
+  const btnTest = document.getElementById('btnTest');
+  const btnExport = document.getElementById('btnExport');
+  const btnClear = document.getElementById('btnClear');
+
+  let allNotifications = [];
+
+  // 1. Load Initial Configuration
+  const config = await window.notifyPushApi.getConfig();
+  inputTopic.value = config.topic || '';
+  inputServer.value = config.serverUrl || 'https://ntfy.sh';
+  inputToken.value = config.token || '';
+  checkSound.checked = config.sound !== false;
+  statusTopic.textContent = `Topic: ${config.topic || '--'}`;
+
+  // Toggle Config Form
+  btnToggleConfig.addEventListener('click', () => {
+    configForm.classList.toggle('collapsed');
+    btnToggleConfig.textContent = configForm.classList.contains('collapsed') ? 'Edit' : 'Close';
+  });
+
+  // Save Configuration
+  configForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const newConfig = {
+      topic: inputTopic.value.trim(),
+      serverUrl: inputServer.value.trim() || 'https://ntfy.sh',
+      token: inputToken.value.trim(),
+      sound: checkSound.checked
+    };
+
+    await window.notifyPushApi.saveConfig(newConfig);
+    statusTopic.textContent = `Topic: ${newConfig.topic || '--'}`;
+    configForm.classList.add('collapsed');
+    btnToggleConfig.textContent = 'Edit';
+  });
+
+  // 2. Status Updates
+  window.notifyPushApi.onStatusChange((status) => {
+    statusText.textContent = status;
+    const isConnected = status.toLowerCase().includes('connected');
+    const isError = status.toLowerCase().includes('error');
+
+    statusDot.className = 'status-dot';
+    statusCard.className = 'status-card';
+
+    if (isConnected) {
+      statusDot.classList.add('pulse');
+    } else if (isError) {
+      statusDot.classList.add('error');
+      statusCard.classList.add('error');
+    }
+  });
+
+  // 3. Render Notifications
+  function renderFeed(items) {
+    notificationList.innerHTML = '';
+
+    if (!items || items.length === 0) {
+      notificationList.appendChild(emptyState);
+      badgeCount.textContent = '0';
+      return;
+    }
+
+    badgeCount.textContent = items.length.toString();
+
+    items.forEach((item) => {
+      const card = document.createElement('div');
+      let priorityClass = 'default';
+      if (item.priority >= 5 || item.priority === 'urgent') priorityClass = 'urgent';
+      else if (item.priority === 4 || item.priority === 'high') priorityClass = 'high';
+      else if (item.priority <= 2) priorityClass = 'low';
+
+      card.className = `notif-card ${priorityClass}`;
+
+      const dateStr = new Date(item.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+      let tagsHtml = '';
+      if (item.tags && item.tags.length > 0) {
+        tagsHtml = `<div class="notif-tags">${item.tags.map(t => `<span class="tag-pill">#${escapeHtml(t)}</span>`).join('')}</div>`;
+      }
+
+      let linkHtml = '';
+      if (item.clickUrl) {
+        linkHtml = `<a class="notif-link" data-url="${escapeHtml(item.clickUrl)}">🔗 Open Link</a>`;
+      }
+
+      card.innerHTML = `
+        <div class="notif-header">
+          <span class="notif-title">${escapeHtml(item.title || 'Notification')}</span>
+          <span class="notif-time">${dateStr}</span>
+        </div>
+        <div class="notif-body">${escapeHtml(item.message || '')}</div>
+        ${tagsHtml}
+        ${linkHtml}
+      `;
+
+      notificationList.appendChild(card);
+    });
+
+    // Attach click handlers to links
+    notificationList.querySelectorAll('.notif-link').forEach(link => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        const url = link.getAttribute('data-url');
+        if (url) window.notifyPushApi.openExternal(url);
+      });
+    });
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>"']/g, (m) => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    }[m]));
+  }
+
+  // 4. Load Initial History
+  allNotifications = await window.notifyPushApi.getHistory();
+  renderFeed(allNotifications);
+
+  // 5. Real-Time New Notification Listener
+  window.notifyPushApi.onNotification((newNotif) => {
+    allNotifications.unshift(newNotif);
+    filterAndRender();
+  });
+
+  // 6. Search / Filter
+  function filterAndRender() {
+    const query = inputSearch.value.trim().toLowerCase();
+    if (!query) {
+      renderFeed(allNotifications);
+      return;
+    }
+    const filtered = allNotifications.filter(n =>
+      (n.title && n.title.toLowerCase().includes(query)) ||
+      (n.message && n.message.toLowerCase().includes(query)) ||
+      (n.tags && n.tags.some(t => t.toLowerCase().includes(query)))
+    );
+    renderFeed(filtered);
+  }
+
+  inputSearch.addEventListener('input', filterAndRender);
+
+  // 7. Action Buttons
+  btnTest.addEventListener('click', async () => {
+    await window.notifyPushApi.testAlert();
+  });
+
+  btnExport.addEventListener('click', async () => {
+    if (allNotifications.length === 0) {
+      alert('No notifications in history to export.');
+      return;
+    }
+    const json = JSON.stringify(allNotifications, null, 2);
+    navigator.clipboard.writeText(json);
+    alert(`Copied ${allNotifications.length} notifications to clipboard as JSON!`);
+  });
+
+  btnClear.addEventListener('click', async () => {
+    if (confirm('Are you sure you want to clear all notification history?')) {
+      await window.notifyPushApi.clearHistory();
+      allNotifications = [];
+      renderFeed(allNotifications);
+    }
+  });
+});

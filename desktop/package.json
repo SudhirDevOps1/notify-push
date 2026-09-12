@@ -1,0 +1,52 @@
+{
+  "name": "notifypush-desktop",
+  "productName": "NotifyPush",
+  "version": "1.0.1",
+  "description": "Lightweight, Privacy-First Push Notification Receiver & System Tray Client",
+  "main": "main.js",
+  "author": "SudhirDevOps1 <singhjgh30@gmail.com>",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "build:win": "electron-builder --win --x64",
+    "build:portable": "electron-builder --win portable --x64",
+    "build:dir": "electron-builder --dir"
+  },
+  "build": {
+    "appId": "com.notifypush.desktop",
+    "productName": "NotifyPush",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "renderer/**/*",
+      "assets/**/*"
+    ],
+    "win": {
+      "icon": "assets/icon.ico",
+      "target": [
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "dir",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "portable": {
+      "artifactName": "NotifyPush-Windows-${version}.exe"
+    }
+  },
+  "devDependencies": {
+    "electron": "^34.0.0",
+    "electron-builder": "^25.1.8"
+  }
+}

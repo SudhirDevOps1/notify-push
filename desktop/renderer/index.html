@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NotifyPush Desktop</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-left">
+        <img src="../assets/icon.png" alt="Logo" class="app-logo" />
+        <div class="title-group">
+          <h1>NotifyPush</h1>
+          <span class="version-tag">Desktop v1.0.1</span>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button id="btnTest" class="icon-btn" title="Send Test Notification">🔔</button>
+        <button id="btnExport" class="icon-btn" title="Export History as JSON">📋</button>
+        <button id="btnClear" class="icon-btn danger" title="Clear History">🗑️</button>
+      </div>
+    </header>
+
+    <!-- Status Card -->
+    <div class="status-card" id="statusCard">
+      <div class="status-indicator">
+        <span class="status-dot pulse" id="statusDot"></span>
+        <span class="status-text" id="statusText">Connecting...</span>
+      </div>
+      <div class="status-topic" id="statusTopic">Topic: --</div>
+    </div>
+
+    <!-- Configuration Card -->
+    <section class="config-card">
+      <div class="card-header">
+        <h3>Connection Settings</h3>
+        <button id="btnToggleConfig" class="text-btn">Edit</button>
+      </div>
+      <form id="configForm" class="config-form collapsed">
+        <div class="input-group">
+          <label for="inputTopic">Topic Name *</label>
+          <input type="text" id="inputTopic" placeholder="e.g. my-server-alerts-9901" required autocomplete="off" />
+        </div>
+        <div class="input-group">
+          <label for="inputServer">Server URL</label>
+          <input type="url" id="inputServer" placeholder="https://ntfy.sh" value="https://ntfy.sh" />
+        </div>
+        <div class="input-group">
+          <label for="inputToken">Auth Token (Optional)</label>
+          <input type="password" id="inputToken" placeholder="Bearer token for protected topics" />
+        </div>
+        <div class="checkbox-group">
+          <label>
+            <input type="checkbox" id="checkSound" checked />
+            Enable Notification Sound
+          </label>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn-primary">Save & Connect</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- Notification Feed Section -->
+    <section class="feed-section">
+      <div class="feed-header">
+        <div class="feed-title-wrap">
+          <h2>Notifications</h2>
+          <span class="badge-count" id="badgeCount">0</span>
+        </div>
+        <div class="search-wrap">
+          <input type="text" id="inputSearch" placeholder="Search alerts..." />
+        </div>
+      </div>
+
+      <!-- Feed Container -->
+      <div class="notification-list" id="notificationList">
+        <div class="empty-state" id="emptyState">
+          <div class="empty-icon">🔔</div>
+          <h4>No Notifications Yet</h4>
+          <p>Incoming alerts from your scripts, servers, and webhooks will appear here in real time.</p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
