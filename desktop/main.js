@@ -3,9 +3,11 @@ const path = require('path');
 const fs = require('fs');
 const http = require('http');
 const https = require('https');
+const { spawn } = require('child_process');
 
 let mainWindow = null;
 let tray = null;
+let streamProcess = null;
 let sseRequest = null;
 let reconnectTimer = null;
 let reconnectDelay = 1000;
@@ -121,11 +123,24 @@ function updateTrayMenu() {
   tray.setContextMenu(contextMenu);
 }
 
-function startSseConnection() {
+function stopActiveStream() {
+  if (streamProcess) {
+    try {
+      streamProcess.kill();
+    } catch (e) {}
+    streamProcess = null;
+  }
   if (sseRequest) {
-    sseRequest.destroy();
+    try {
+      sseRequest.destroy();
+    } catch (e) {}
     sseRequest = null;
   }
+}
+
+function startSseConnection() {
+  stopActiveStream();
+
   if (reconnectTimer) {
     clearTimeout(reconnectTimer);
     reconnectTimer = null;
@@ -142,11 +157,80 @@ function startSseConnection() {
 
   updateStatus('Connecting...');
 
+  // Use Windows built-in curl.exe first (native, signed by Microsoft, immune to Defender socket blocks)
+  const curlStarted = startCurlStream(urlStr);
+  if (!curlStarted) {
+    startNodeHttpsStream(urlStr);
+  }
+}
+
+function startCurlStream(urlStr) {
+  const args = ['-s', '-N'];
+  if (appConfig.token?.trim()) {
+    args.push('-H', `Authorization: Bearer ${appConfig.token.trim()}`);
+  }
+  args.push(urlStr);
+
+  try {
+    const proc = spawn('curl.exe', args, {
+      windowsHide: true
+    });
+    streamProcess = proc;
+
+    let buffer = '';
+    proc.stdout.on('data', (chunk) => {
+      buffer += chunk.toString('utf8');
+      const lines = buffer.split('\n');
+      buffer = lines.pop(); // keep last incomplete line
+
+      for (const line of lines) {
+        if (!line.trim()) continue;
+        try {
+          const data = JSON.parse(line.trim());
+          if (data.event === 'open') {
+            updateStatus('Connected & Listening');
+            reconnectDelay = 1000;
+          } else if (data.event === 'keepalive') {
+            // Keepalive pulse: connection is healthy
+          } else {
+            handleIncomingNotification(data);
+          }
+        } catch (e) {
+          // ignore malformed lines
+        }
+      }
+    });
+
+    proc.on('error', (err) => {
+      console.warn('curl.exe unavailable, falling back to node https:', err.message);
+      streamProcess = null;
+      startNodeHttpsStream(urlStr);
+    });
+
+    proc.on('exit', (code) => {
+      if (streamProcess === proc) {
+        streamProcess = null;
+        updateStatus('Disconnected (Reconnecting...)');
+        scheduleReconnect();
+      }
+    });
+
+    return true;
+  } catch (err) {
+    console.warn('Could not spawn curl.exe:', err.message);
+    streamProcess = null;
+    return false;
+  }
+}
+
+function startNodeHttpsStream(urlStr) {
   try {
     const parsedUrl = new URL(urlStr);
     const client = parsedUrl.protocol === 'https:' ? https : http;
 
-    const headers = {};
+    const headers = {
+      'User-Agent': 'NotifyPush-Desktop/1.0.1'
+    };
     if (appConfig.token?.trim()) {
       headers['Authorization'] = `Bearer ${appConfig.token.trim()}`;
     }
@@ -226,13 +310,16 @@ function handleIncomingNotification(data) {
   };
 
   notificationHistory.unshift(item);
+  if (notificationHistory.length > 200) {
+    notificationHistory = notificationHistory.slice(0, 200);
+  }
   saveHistory(notificationHistory);
 
   if (mainWindow && !mainWindow.isDestroyed()) {
     mainWindow.webContents.send('new-notification', item);
   }
 
-  // Windows Desktop Toast Notification
+  // Windows Native Toast Notification
   if (Notification.isSupported()) {
     const notif = new Notification({
       title: item.title,
@@ -269,24 +356,48 @@ function sendTestAlert() {
     tags: ['tada', 'white_check_mark']
   });
 
-  const parsedUrl = new URL(server);
-  const client = parsedUrl.protocol === 'https:' ? https : http;
+  const curlArgs = [
+    '-s',
+    '-X', 'POST',
+    url,
+    '-H', 'Content-Type: application/json',
+    '-d', body
+  ];
+  if (appConfig.token?.trim()) {
+    curlArgs.push('-H', `Authorization: Bearer ${appConfig.token.trim()}`);
+  }
 
-  const req = client.request(server, {
-    method: 'POST',
-    headers: {
+  try {
+    const p = spawn('curl.exe', curlArgs, { windowsHide: true });
+    p.on('error', () => {
+      sendTestAlertFallback(url, body);
+    });
+  } catch (err) {
+    sendTestAlertFallback(url, body);
+  }
+}
+
+function sendTestAlertFallback(url, body) {
+  try {
+    const parsedUrl = new URL(url);
+    const client = parsedUrl.protocol === 'https:' ? https : http;
+    const headers = {
       'Content-Type': 'application/json',
       'Content-Length': Buffer.byteLength(body)
+    };
+    if (appConfig.token?.trim()) {
+      headers['Authorization'] = `Bearer ${appConfig.token.trim()}`;
     }
-  }, (res) => {
-    // result handled via SSE
-  });
-
-  req.on('error', (err) => {
-    console.error('Test alert error:', err.message);
-  });
-  req.write(body);
-  req.end();
+    const req = client.request(parsedUrl, {
+      method: 'POST',
+      headers
+    });
+    req.on('error', (err) => {
+      console.error('Test alert fallback error:', err.message);
+    });
+    req.write(body);
+    req.end();
+  } catch (e) {}
 }
 
 function createWindow() {
@@ -366,6 +477,10 @@ app.whenReady().then(() => {
       shell.openExternal(url);
     }
   });
+});
+
+app.on('before-quit', () => {
+  stopActiveStream();
 });
 
 app.on('window-all-closed', () => {
