@@ -1,4 +1,4 @@
-# 🔔 NotifyPush
+# <img src="public/app_icon.svg" width="36" height="36" alt="NotifyPush Icon" valign="middle" /> NotifyPush
 
 <p align="center">
   <img src="public/hero_banner.svg" alt="NotifyPush Hero Banner" width="100%" />
@@ -9,11 +9,12 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/SudhirDevOps1/notify-push/actions/workflows/ci.yml"><img src="https://img.shields.io/badge/CI%20Build-passing-brightgreen?style=for-the-badge&logo=githubactions&logoColor=white" alt="CI Status"/></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=for-the-badge" alt="License"/></a>
-  <a href="https://developer.android.com/"><img src="https://img.shields.io/badge/Android-8.0%2B-green?style=for-the-badge&logo=android&logoColor=white" alt="Platform"/></a>
-  <a href="#-sdk-toolkit"><img src="https://img.shields.io/badge/SDKs-TS%20%7C%20Python%20%7C%20PHP%20%7C%20Go%20%7C%20Bash-orange?style=for-the-badge" alt="SDKs"/></a>
-  <a href="docs/README.hinglish.md"><img src="https://img.shields.io/badge/Language-%F0%9F%87%AE%F0%9F%87%B3%20Hinglish%20Guide-red?style=for-the-badge" alt="Hinglish Guide"/></a>
+  <a href="https://www.npmjs.com/package/notifypush-client"><img src="https://img.shields.io/npm/v/notifypush-client?style=for-the-badge&logo=npm&logoColor=white&color=CB3837" alt="NPM Version"/></a>
+  <a href="https://github.com/SudhirDevOps1/notify-push/releases"><img src="https://img.shields.io/github/v/release/SudhirDevOps1/notify-push?style=for-the-badge&logo=github&color=7C3AED" alt="GitHub Release"/></a>
+  <a href="https://github.com/SudhirDevOps1/notify-push/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/SudhirDevOps1/notify-push/ci.yml?branch=main&style=for-the-badge&logo=githubactions&logoColor=white&label=CI%20Build" alt="CI Status"/></a>
+  <a href="https://developer.android.com/"><img src="https://img.shields.io/badge/Android-8.0%2B-3DDC84?style=for-the-badge&logo=android&logoColor=white" alt="Android"/></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-3B82F6?style=for-the-badge" alt="License"/></a>
+  <a href="docs/README.hinglish.md"><img src="https://img.shields.io/badge/Language-%F0%9F%87%AE%F0%9F%87%B3%20Hinglish%20Guide-EF4444?style=for-the-badge" alt="Hinglish Guide"/></a>
 </p>
 
 ---
@@ -99,6 +100,11 @@ curl -X POST "https://ntfy.sh/my-private-alerts-9901" \
 All SDKs live directly in the `/sdk` directory and are designed with **zero heavy dependencies** and fail-safe, non-crashing execution.
 
 ### 1. TypeScript / Node.js / Next.js
+[![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-5FA04E?style=flat-square&logo=node.js&logoColor=white)](https://nodejs.org/)
+[![npm version](https://img.shields.io/npm/v/notifypush-client?style=flat-square&logo=npm&color=CB3837)](https://www.npmjs.com/package/notifypush-client)
+[![npm downloads](https://img.shields.io/npm/dm/notifypush-client?style=flat-square&color=blue)](https://www.npmjs.com/package/notifypush-client)
+
 *Deep Dive:* **[TypeScript SDK Documentation](docs/SDK_TYPESCRIPT.md)**
 
 ```bash
@@ -125,6 +131,11 @@ await notify.send({
 ---
 
 ### 2. Python (FastAPI, Django, Flask)
+[![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=flat-square&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![Django](https://img.shields.io/badge/Django-092E20?style=flat-square&logo=django&logoColor=white)](https://www.djangoproject.com/)
+[![Zero Dependency](https://img.shields.io/badge/Dependencies-Zero-10B981?style=flat-square)](#)
+
 *Deep Dive:* **[Python SDK Documentation](docs/SDK_PYTHON.md)**
 
 ```bash
@@ -147,6 +158,10 @@ notify.send(
 ---
 
 ### 3. PHP (Laravel, Core PHP)
+[![PHP](https://img.shields.io/badge/PHP-777BB4?style=flat-square&logo=php&logoColor=white)](https://www.php.net/)
+[![Laravel](https://img.shields.io/badge/Laravel-FF2D20?style=flat-square&logo=laravel&logoColor=white)](https://laravel.com/)
+[![Composer](https://img.shields.io/badge/Composer-885630?style=flat-square&logo=composer&logoColor=white)](https://getcomposer.org/)
+
 *Deep Dive:* **[PHP SDK Documentation](docs/SDK_PHP.md)**
 
 ```bash
@@ -168,6 +183,9 @@ $notify->send(
 ---
 
 ### 4. Go (Golang Microservices)
+[![Go](https://img.shields.io/badge/Go-00ADD8?style=flat-square&logo=go&logoColor=white)](https://go.dev/)
+[![Microservices](https://img.shields.io/badge/Context-Aware-7C3AED?style=flat-square)](#)
+
 *Deep Dive:* **[Go SDK Documentation](docs/SDK_GO.md)**
 
 ```bash
@@ -191,6 +209,8 @@ func main() {
 ---
 
 ### 5. CLI & GitHub Actions Workflow
+[![GitHub Actions](https://img.shields.io/badge/GitHub%20Actions-2088FF?style=flat-square&logo=githubactions&logoColor=white)](https://github.com/features/actions)
+[![Bash](https://img.shields.io/badge/Bash-4EAA25?style=flat-square&logo=gnubash&logoColor=white)](https://www.gnu.org/software/bash/)
 
 In your `.github/workflows/deploy.yml`:
 
@@ -209,6 +229,16 @@ In your `.github/workflows/deploy.yml`:
 ---
 
 ## 📱 Android Mobile App
+[![Android Platform](https://img.shields.io/badge/Android-8.0%2B-3DDC84?style=flat-square&logo=android&logoColor=white)](https://developer.android.com/)
+[![Kotlin](https://img.shields.io/badge/Kotlin-2.0-7F52FF?style=flat-square&logo=kotlin&logoColor=white)](https://kotlinlang.org/)
+[![Jetpack Compose](https://img.shields.io/badge/Jetpack%20Compose-Material%203-4285F4?style=flat-square&logo=jetpackcompose&logoColor=white)](https://developer.android.com/jetpack/compose)
+[![Room DB](https://img.shields.io/badge/Room%20DB-SQLite-003B57?style=flat-square&logo=sqlite&logoColor=white)](https://developer.android.com/training/data-storage/room)
+
+<p align="center">
+  <img src="public/app_icon.svg" alt="NotifyPush Official Android App Icon" width="96" height="96" />
+  <br />
+  <sub><b>Official NotifyPush Android App Icon</b></sub>
+</p>
 
 The Android client is built with modern **Jetpack Compose (Material 3)**, **Room Database**, and **Kotlin Coroutines**:
 
@@ -226,6 +256,9 @@ To prevent aggressive OEM battery managers (MIUI, OneUI, ColorOS) from sleeping 
 ---
 
 ## 🐳 Self-Hosting with Docker
+[![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat-square&logo=docker&logoColor=white)](https://www.docker.com/)
+[![Caddy](https://img.shields.io/badge/Caddy%20SSL-1F88C0?style=flat-square&logo=caddy&logoColor=white)](https://caddyserver.com/)
+
 *Deep Dive:* **[Self-Hosting Guide](docs/SELF_HOSTING.md)**
 
 Run your own private notification gateway on a VPS in 30 seconds:

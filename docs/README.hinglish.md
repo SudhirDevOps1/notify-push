@@ -1,7 +1,15 @@
-# 🔔 NotifyPush - Hinglish संपूर्ण गाइड (हिंदी / English)
+# <img src="../public/app_icon.svg" width="36" height="36" alt="NotifyPush Icon" valign="middle" /> NotifyPush - Hinglish संपूर्ण गाइड (हिंदी / English)
 
 <p align="center">
   <img src="../public/hero_banner.svg" alt="NotifyPush Hero Banner" width="100%" />
+</p>
+
+<p align="center">
+  <a href="https://www.npmjs.com/package/notifypush-client"><img src="https://img.shields.io/npm/v/notifypush-client?style=for-the-badge&logo=npm&logoColor=white&color=CB3837" alt="NPM Version"/></a>
+  <a href="https://github.com/SudhirDevOps1/notify-push/releases"><img src="https://img.shields.io/github/v/release/SudhirDevOps1/notify-push?style=for-the-badge&logo=github&color=7C3AED" alt="GitHub Release"/></a>
+  <a href="https://developer.android.com/"><img src="https://img.shields.io/badge/Android-8.0%2B-3DDC84?style=for-the-badge&logo=android&logoColor=white" alt="Android"/></a>
+  <a href="../LICENSE"><img src="https://img.shields.io/badge/license-MIT-3B82F6?style=for-the-badge" alt="License"/></a>
+  <a href="../README.md"><img src="https://img.shields.io/badge/Language-%F0%9F%87%AC%F0%9F%87%A7%20English%20Docs-blue?style=for-the-badge" alt="English Documentation"/></a>
 </p>
 
 > **NotifyPush** ek lightweight, privacy-first, zero-telemetry push notification system hai. Iski madad se aap apni kisi bhi website, backend API, serverless function (Next.js, Python, PHP, Go), ya DevOps script se apne Android mobile par **direct real-time Heads-Up notification (< 500ms)** bhej sakte hain.
@@ -63,6 +71,12 @@ NotifyPush ke do main hisse hain:
 ---
 
 ## 3. Android App Setup (Step-by-Step)
+
+<p align="center">
+  <img src="../public/app_icon.svg" alt="NotifyPush Android App Icon" width="96" height="96" />
+  <br />
+  <sub><b>Official NotifyPush Android App Icon</b></sub>
+</p>
 
 ### Step 1: App Ko Open Karein
 App kholte hi aapko clean modern dashboard dikhega. Agar notification permission maange toh **"Allow Notifications"** par tap karein.
