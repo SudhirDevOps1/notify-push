@@ -40,3 +40,53 @@ client.send(
     tags=["floppy_disk"]
 )
 ```
+
+---
+
+## 💡 Practical Real-World Blueprints
+
+### Blueprint 1: FastAPI Global Exception Handler
+```python
+from fastapi import FastAPI, Request
+from notifypush import notify
+
+app = FastAPI()
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    notify.send(
+        topic="backend-errors-9901",
+        title="🚨 Production 500 Error",
+        message=f"Endpoint {request.method} {request.url.path} failed: {str(exc)[:120]}",
+        priority="urgent",
+        tags=["fire", "warning"],
+        click_url="https://sentry.internal.infra"
+    )
+    return {"error": "Internal Server Error"}
+```
+
+### Blueprint 2: ML Model Training Completion Notification
+```python
+from notifypush import notify
+import time
+
+def train_model():
+    print("Training neural network...")
+    time.sleep(10) # Simulate training
+    val_accuracy = 0.984
+
+    # Notify phone & desktop workstation immediately
+    notify.send(
+        topic="ml-training-alerts-4412",
+        title="🤖 Model Training Complete",
+        message=f"PyTorch Epoch 100/100 finished.\nValidation Accuracy: {val_accuracy * 100:.2f}%",
+        priority="default",
+        tags=["robot", "white_check_mark"],
+        actions=[
+            {"action": "view", "label": "View WandB Dashboard", "url": "https://wandb.ai/my-project"}
+        ]
+    )
+
+if __name__ == "__main__":
+    train_model()
+```

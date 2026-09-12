@@ -21,6 +21,33 @@
 
 ---
 
+
+---
+
+## 🗂️ Multi-App Channels Manager
+
+The NotifyPush Desktop application provides a built-in **Multi-App Channels Manager** that lets you monitor notifications across all your different websites, backend servers, and automation jobs simultaneously:
+
+- ➕ **Add Distinct Apps**: Manage separate channels for `E-Commerce Orders`, `DevOps VPS`, `Client Leads`, etc.
+- 🎲 **Unguessable Topic Generator**: One-click high-entropy random topic generator ensures maximum privacy.
+- 🏷️ **Origin Tagging**: Native Windows toasts automatically tag the alert title with the originating app: `[AppName] Title`.
+- 🌐 **Ready-Made Code Modal**: Click the code icon on any app to view and copy instant integration snippets for **Node/TypeScript**, **Python**, **PHP**, **Go**, and **cURL**.
+- 🔔 **Instant Test Ping**: Verify that your Windows toast alerts and audio notifications are firing correctly.
+- 🗑️ **Safe Channel Deletion**: Remove inactive channels with one click.
+
+---
+
+## 💡 Desktop Use Cases (Where & Why to Use on Windows)
+
+1. **Full-Stack Developers & Engineers:**
+   - Keep NotifyPush running minimized in the Windows System Tray while coding in VS Code / IDE.
+   - Receive immediate notification when GitHub Actions CI/CD finishes building or when a unit test fails in production.
+2. **E-Commerce Store Owners & Founders:**
+   - Get native Windows 10/11 toast alerts with sound whenever a customer completes a purchase on Shopify/WooCommerce/Stripe.
+   - Click the action button on the toast to open the order receipt directly in your default browser.
+3. **DevOps & SysAdmins:**
+   - Monitor remote Linux VPS health, memory spikes, and failed SSH attempts directly on your dual-monitor workstation.
+
 ## 🚀 Running the App
 
 ### Option 1: Standalone Portable Binary (No Installation Required)

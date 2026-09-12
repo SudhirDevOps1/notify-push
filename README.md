@@ -29,27 +29,160 @@
 ## 📑 Table of Contents
 
 1. [Overview & Motivation](#-overview--motivation)
-2. [Why NotifyPush vs. Firebase/FCM?](#-why-notifypush-vs-firebasefcm)
-3. [Quick Start in 60 Seconds](#-quick-start-in-60-seconds)
-4. [Universal SDK Toolkit](#-universal-sdk-toolkit)
+2. [Why, Where, When & In Which Projects to Use NotifyPush](#-why-where-when--in-which-projects-to-use-notifypush)
+   - [Why (Kyu) Use NotifyPush?](#1-why-kyu-use-notifypush)
+   - [Where (Kaha) Can You Integrate It?](#2-where-kaha-can-you-integrate-it)
+   - [When (Kab) Should You Trigger Notifications?](#3-when-kab-should-you-trigger-notifications)
+   - [Which Project Types?](#4-which-project-types-kis-types-ke-projects-me-use-karein)
+   - [Multi-App Channels Manager](#5-️-multi-app-channels-manager-new-in-v101)
+3. [Why NotifyPush vs. Firebase/FCM?](#-why-notifypush-vs-firebasefcm)
+4. [Quick Start in 60 Seconds](#-quick-start-in-60-seconds)
+5. [Universal SDK Toolkit](#-universal-sdk-toolkit)
    - [TypeScript / Node.js / Next.js](#1-typescript--nodejs--nextjs)
    - [Python (FastAPI, Django, Flask)](#2-python-fastapi-django-flask)
    - [PHP (Laravel, Core PHP)](#3-php-laravel-core-php)
    - [Go (Golang Microservices)](#4-go-golang-microservices)
    - [CLI & GitHub Actions](#5-cli--github-actions-workflow)
-5. [Android Mobile App](#-android-mobile-app)
+6. [Android Mobile App](#-android-mobile-app)
    - [Camera QR Code Scanner](#instant-qr-code-scanner)
    - [24/7 Resilient Daemon Service](#247-resilient-background-daemon)
    - [Battery Optimization Setup](#battery-optimization-setup)
-6. [Desktop Application (Windows .exe)](#-desktop-application-windows-exe)
+7. [Desktop Application (Windows .exe)](#-desktop-application-windows-exe)
    - [Native Windows Toasts & Tray Daemon](#native-windows-toasts--tray-daemon)
    - [Standalone Portable .exe](#standalone-portable-exe)
-7. [Self-Hosting with Docker](#-self-hosting-with-docker)
-8. [Security & End-to-End Encryption](#-security--end-to-end-encryption)
-9. [Documentation Index](#-documentation-index)
-10. [Contributing & License](#-contributing--license)
+8. [Self-Hosting with Docker](#-self-hosting-with-docker)
+9. [Security & End-to-End Encryption](#-security--end-to-end-encryption)
+10. [Documentation Index](#-documentation-index)
+11. [Contributing & License](#-contributing--license)
 
 ---
+
+---
+
+
+---
+
+## 💡 Why, Where, When & In Which Projects to Use NotifyPush
+
+### 1. Why (Kyu) Use NotifyPush?
+
+| Core Problem with Traditional Push | How NotifyPush Solves It |
+|---|---|
+| **Privacy & Telemetry Leaks**: Firebase/OneSignal log device IPs, user metadata, and message contents. | 🛡️ **Zero Telemetry**: No third-party data collection. Direct TLS stream to your phone. E2EE (AES-256-GCM) ready. |
+| **Vendor Lock-in & Complexity**: Requires Google Cloud Console, `google-services.json`, SHA-1 fingerprints, and app store approvals. | ⚡ **Zero Setup Friction**: No accounts, no credentials. Pick a secret topic name and start receiving alerts in 60 seconds. |
+| **Expensive Monthly Subscriptions**: Pusher, Twilio, and PagerDuty charge $50–$200+/month once volumes scale. | 🆓 **100% Free & Open Source**: Unlimited notifications via public gateways or your own private Docker container. |
+| **High Latency & Queuing Delays**: Firebase can throttle background notifications by 5–30 seconds during power-saving modes. | 🚀 **Under 300ms Delivery**: Direct Server-Sent Events (SSE) stream delivers alerts straight to hardware foreground daemon. |
+| **Single-App Chaos**: Mixing alerts from 5 different websites into one messy notification channel. | 🗂️ **Multi-App Channels Manager**: Register unlimited distinct apps (e.g. *Store Leads*, *Prod Server*, *Personal Blog*) on 1 phone & 1 desktop app with sender name tagging. |
+
+---
+
+### 2. Where (Kaha) Can You Integrate It?
+
+NotifyPush works anywhere an outbound `HTTP POST` request can be sent. It connects seamlessly across every layer of your technology stack:
+
+```
+                                  ┌──────────────────────────────┐
+                                  │   YOUR INTEGRATION SOURCES   │
+                                  └──────────────┬───────────────┘
+                                                 │
+      ┌───────────────────┬──────────────────────┼──────────────────────┬───────────────────┐
+      │                   │                      │                      │                   │
+      ▼                   ▼                      ▼                      ▼                   ▼
+┌───────────┐     ┌───────────────┐      ┌───────────────┐      ┌───────────────┐   ┌───────────────┐
+│ Web Front │     │ Backend APIs  │      │  Serverless   │      │ DevOps & CI/CD│   │ Homelab & IoT │
+│   End     │     │               │      │   Functions   │      │   Pipelines   │   │               │
+├───────────┤     ├───────────────┤      ├───────────────┤      ├───────────────┤   ├───────────────┤
+│ • Next.js │     │ • Node/Express│      │ • Vercel Edge │      │ • GitHub Act. │   │ • Raspberry Pi│
+│ • React   │     │ • FastAPI/Py  │      │ • Cloudflare  │      │ • GitLab CI   │   │ • Home Assist │
+│ • Contact │     │ • Laravel/PHP │      │ • AWS Lambda  │      │ • Docker Mon. │   │ • Linux Cron  │
+│   Forms   │     │ • Go Services │      │ • Supabase Fn │      │ • Fail2ban    │   │ • Uptime Kuma │
+└─────┬─────┘     └───────┬───────┘      └───────┬───────┘      └───────┬───────┘   └───────┬───────┘
+      │                   │                      │                      │                   │
+      └───────────────────┴──────────────────────┼──────────────────────┴───────────────────┘
+                                                 │ HTTP POST (Zero Dependencies)
+                                                 ▼
+                                  ┌──────────────────────────────┐
+                                  │ Gateway (ntfy.sh or Docker)  │
+                                  └──────────────┬───────────────┘
+                                                 │ Direct SSE Stream (< 300ms)
+                                  ┌──────────────┴───────────────┐
+                                  ▼                              ▼
+                       ┌────────────────────┐         ┌────────────────────┐
+                       │ Android Mobile App │         │ Windows Desktop    │
+                       │ (Foreground Daemon)│         │ (Tray & Toast .exe)│
+                       └────────────────────┘         └────────────────────┘
+```
+
+- **Web Frontends & Forms:** Static websites, Next.js portfolio forms, Lead generation landing pages, WordPress/Webflow inquiry hooks.
+- **Backend Services & APIs:** Express.js, NestJS, FastAPI, Django, Flask, Laravel, Symfony, Go Gin/Fiber microservices.
+- **Serverless & Edge Compute:** Vercel Edge Functions, Cloudflare Workers, AWS Lambda, Supabase Edge Functions, Netlify Functions.
+- **Payment & Webhook Processors:** Stripe webhook listeners, Razorpay, PayPal IPN, LemonSqueezy, Shopify webhooks, GitHub push hooks.
+- **CI/CD & Cloud Infrastructure:** GitHub Actions workflows, GitLab CI, AWS CloudWatch triggers, Docker Swarm / Kubernetes alert managers.
+- **Linux SysAdmin & Homelab:** Daily cron jobs, server resource monitors, disk capacity monitors, SSH login tripwires, Raspberry Pi temperature alarms.
+
+---
+
+### 3. When (Kab) Should You Trigger Notifications?
+
+Trigger NotifyPush whenever a critical business or operational event occurs that requires immediate human attention:
+
+| Category | Trigger Event | Priority | Example Alert Content |
+|---|---|---|---|
+| 🛒 **E-Commerce** | New Customer Order Paid | `high` (4) | `[Shopify] New order #1042: $249.00 from Alex M.` |
+| 💰 **Billing** | Subscription Payment Failed | `urgent` (5) | `[Stripe] Failed renewal for Acme Corp ($899/mo). Retrying.` |
+| ✉️ **Leads** | Contact Form Submission | `high` (4) | `[Agency Site] New client lead from rahul@startup.io: "Need Web App"` |
+| 🚨 **DevOps/SRE** | CPU/Memory Spike (>90%) | `urgent` (5) | `[Prod VPS] CPU at 94.8% for 5 mins. Docker container 'api' restarting.` |
+| 📉 **Production** | 500 Error Burst on API | `urgent` (5) | `[API Gateway] 5xx rate exceeded 8% over last 60 seconds.` |
+| 🛡️ **Security** | Unauthorized SSH Attempt | `urgent` (5) | `[Bastion Server] Failed root login attempt from IP 185.220.101.4` |
+| 💾 **SysAdmin** | Nightly Database Backup | `default` (3) | `[PostgreSQL] Backup finished: 4.2 GB dump uploaded to Cloudflare R2.` |
+| 🛠️ **CI/CD** | Production Deployment Failed | `high` (4) | `[GitHub Actions] Deploy to AWS failed on commit d4e1f7.` |
+| 🤖 **AI / ML** | Model Training Finished | `default` (3) | `[PyTorch Worker] Epoch 100/100 completed. Val loss: 0.041.` |
+| 🏠 **Homelab** | NAS Disk Space Low (<10%) | `high` (4) | `[Synology NAS] Volume 1 has only 180 GB remaining.` |
+
+---
+
+### 4. Which Project Types (Kis Types Ke Projects Me Use Karein)?
+
+#### A. Freelancer & Agency Client Portfolios
+- **Why:** Clients often miss inquiry emails or don't want to pay $30/month for Twilio SMS just to get contact form notifications.
+- **Implementation:** Wire your Next.js/HTML contact form action directly to NotifyPush. Receive leads instantly on your phone & desktop while coding.
+
+#### B. E-Commerce & Dropshipping Stores (Shopify / WooCommerce / Next.js)
+- **Why:** Real-time sale dopamine! Instant notification with order amount, items, and a one-tap action button to open the admin dashboard.
+- **Implementation:** Call `notify.send()` on checkout completion or inside a Stripe/Razorpay webhook handler.
+
+#### C. Indie Hackers & SaaS Founders
+- **Why:** Monitor signups, trial-to-paid conversions, churn events, and fatal error crashes without leaving your IDE or walking away from your desk.
+- **Implementation:** Integrate into user registration endpoints and centralized error handlers.
+
+#### D. DevOps, Cloud Engineers & SysAdmins
+- **Why:** Replace cumbersome PagerDuty or Slack alert channel noise. Send high-priority, vibrating alerts straight to your phone for true P1 incidents.
+- **Implementation:** Add 1-line cURL dispatches to bash cron scripts, `after_script` in CI/CD, or alertmanager webhooks.
+
+#### E. Data Science & Machine Learning Scripts
+- **Why:** Model training, data scraping, or batch video rendering takes hours. Get an alert the exact second your script terminates.
+- **Implementation:** Add 2 lines of Python at the end of your training loop: `notify.send(title="Training Complete", message="Model weights saved.")`.
+
+#### F. Homelab, Raspberry Pi & Smart Home Enthusiasts
+- **Why:** Keep track of personal infrastructure, Plex servers, Home Assistant events, and temperature monitors without exposing ports to the public internet.
+- **Implementation:** Self-host the ntfy Docker container on your local network or VPS.
+
+---
+
+### 5. 🗂️ Multi-App Channels Manager (New in v1.0.1)
+
+Both the **Android Mobile App** and the **Windows Desktop App** now include a complete **Multi-App Channels Manager**. You can monitor 10+ different web applications simultaneously without cross-talk:
+
+1. **Add App:** Assign a distinct application name (e.g. `Shopify Store`, `Portfolio Leads`, `VPS Monitor`).
+2. **Dedicated Topic:** Use the 🎲 **Random Generator** button to create a high-entropy unguessable topic (e.g. `shop-orders-8912`) or specify your own custom channel.
+3. **Sender Name Tagging:** When an alert is received, it automatically displays with the originating app tagged in bold:
+   ```text
+   [Shopify Store] 💳 New Order #1042 Paid ($149.00)
+   [Portfolio Leads] ✉️ Rahul Sharma submitted inquiry
+   [VPS Monitor] 🔥 High CPU usage: 93.2%
+   ```
+4. **📋 1-Click Code Snippets:** Click the **Code Snippet (🌐 / 📋)** button in either app to copy ready-made integration code tailored to that specific channel for **Next.js / Node.js**, **Python**, **PHP**, **Go**, and **cURL**.
+5. **🔔 Test Alert:** Instantly trigger a test ping to verify end-to-end connectivity in under 1 second.
 
 ## 🌟 Overview & Motivation
 

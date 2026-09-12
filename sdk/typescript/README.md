@@ -65,3 +65,58 @@ if (!result.success) {
   console.error("Alert failed:", result.error);
 }
 ```
+
+---
+
+## 💡 Practical Real-World Blueprints
+
+### Blueprint 1: Next.js App Router Contact Form / Lead Generation
+```typescript
+// app/api/contact/route.ts
+import { NextResponse } from 'next/server';
+import { notify } from 'notifypush-client';
+
+export async function POST(req: Request) {
+  const { name, email, message, budget } = await req.json();
+
+  // Save to DB...
+
+  // Dispatch instant phone & desktop heads-up notification:
+  await notify.send({
+    topic: process.env.NOTIFY_LEADS_TOPIC || 'agency-leads-8812',
+    title: `✉️ New Lead: ${name}`,
+    message: `Budget: ${budget || 'Not specified'}\nEmail: ${email}\nMessage: ${message.slice(0, 100)}`,
+    priority: 'high',
+    tags: ['briefcase', 'moneybag'],
+    clickUrl: `mailto:${email}`,
+    actions: [
+      { action: 'view', label: 'Reply via Email', url: `mailto:${email}` }
+    ]
+  });
+
+  return NextResponse.json({ success: true });
+}
+```
+
+### Blueprint 2: Stripe Webhook Payment Confirmation
+```typescript
+// app/api/webhooks/stripe/route.ts
+import { notify } from 'notifypush-client';
+
+export async function handlePaymentSuccess(session: any) {
+  const amount = (session.amount_total / 100).toFixed(2);
+  const customerEmail = session.customer_details?.email;
+
+  await notify.send({
+    topic: 'store-sales-9921',
+    title: `💳 Payment Received: $${amount}`,
+    message: `Customer: ${customerEmail}\nOrder ID: ${session.id.slice(-8)}`,
+    priority: 'high',
+    tags: ['dollar', 'white_check_mark'],
+    clickUrl: `https://dashboard.stripe.com/payments/${session.payment_intent}`,
+    actions: [
+      { action: 'view', label: 'View in Stripe', url: `https://dashboard.stripe.com/payments/${session.payment_intent}` }
+    ]
+  });
+}
+```
