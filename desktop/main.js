@@ -307,15 +307,35 @@ function scheduleReconnect() {
 function handleIncomingNotification(data) {
   if (data.event !== 'message') return;
 
+  let title = data.title || 'Notification';
+  let message = data.message || '';
+  let priority = data.priority || 3;
+  let tags = Array.isArray(data.tags) ? data.tags : [];
+  let clickUrl = data.click || null;
+  let actions = data.actions || [];
+
+  // If message itself is JSON encoded, unwrap it (e.g. from webhooks or raw JSON dispatches)
+  if (typeof message === 'string' && message.trim().startsWith('{') && message.trim().endsWith('}')) {
+    try {
+      const parsed = JSON.parse(message.trim());
+      if (parsed.title) title = parsed.title;
+      if (parsed.message) message = parsed.message;
+      if (parsed.priority) priority = parsed.priority;
+      if (parsed.tags) tags = Array.isArray(parsed.tags) ? parsed.tags : tags;
+      if (parsed.click) clickUrl = parsed.click;
+      if (parsed.actions) actions = parsed.actions;
+    } catch (e) {}
+  }
+
   const item = {
     id: data.id || ('id_' + Date.now()),
     time: data.time ? data.time * 1000 : Date.now(),
-    title: data.title || 'Notification',
-    message: data.message || '',
-    priority: data.priority || 3,
-    tags: data.tags || [],
-    clickUrl: data.click || null,
-    actions: data.actions || []
+    title,
+    message,
+    priority,
+    tags,
+    clickUrl,
+    actions
   };
 
   notificationHistory.unshift(item);
@@ -357,41 +377,41 @@ function sendTestAlert() {
   let server = (appConfig.serverUrl || 'https://ntfy.sh').replace(/\/+$/, '');
   const url = `${server}/${encodeURIComponent(topic)}`;
 
-  const body = JSON.stringify({
-    topic,
-    title: 'Desktop Test Alert 🔔',
-    message: 'NotifyPush Windows Desktop Client is working flawlessly!',
-    priority: 4,
-    tags: ['tada', 'white_check_mark']
-  });
+  const systemCurl = path.join(process.env.SystemRoot || 'C:\\Windows', 'System32', 'curl.exe');
+  const curlExe = fs.existsSync(systemCurl) ? systemCurl : 'curl.exe';
 
   const curlArgs = [
     '-s',
     '-X', 'POST',
     url,
-    '-H', 'Content-Type: application/json',
-    '-d', body
+    '-H', 'Title: Desktop Test Alert 🔔',
+    '-H', 'Priority: high',
+    '-H', 'Tags: tada,white_check_mark',
+    '-d', 'NotifyPush Windows Desktop Client is working flawlessly!'
   ];
   if (appConfig.token?.trim()) {
     curlArgs.push('-H', `Authorization: Bearer ${appConfig.token.trim()}`);
   }
 
   try {
-    const p = spawn('curl.exe', curlArgs, { windowsHide: true });
+    const p = spawn(curlExe, curlArgs, { windowsHide: true });
     p.on('error', () => {
-      sendTestAlertFallback(url, body);
+      sendTestAlertFallback(url);
     });
   } catch (err) {
-    sendTestAlertFallback(url, body);
+    sendTestAlertFallback(url);
   }
 }
 
-function sendTestAlertFallback(url, body) {
+function sendTestAlertFallback(url) {
   try {
     const parsedUrl = new URL(url);
     const client = parsedUrl.protocol === 'https:' ? https : http;
+    const body = 'NotifyPush Windows Desktop Client is working flawlessly!';
     const headers = {
-      'Content-Type': 'application/json',
+      'Title': 'Desktop Test Alert 🔔',
+      'Priority': 'high',
+      'Tags': 'tada,white_check_mark',
       'Content-Length': Buffer.byteLength(body)
     };
     if (appConfig.token?.trim()) {
