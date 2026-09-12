@@ -2,6 +2,20 @@ import { ClientConfig, SendOptions, DispatchResult } from './types';
 export * from './types';
 export * from './crypto';
 
+function encodeHeaderValue(value: string): string {
+  if (/[^\x00-\x7F]/.test(value)) {
+    if (typeof Buffer !== 'undefined') {
+      return `=?utf-8?B?${Buffer.from(value, 'utf-8').toString('base64')}?=`;
+    }
+    try {
+      return `=?utf-8?B?${btoa(unescape(encodeURIComponent(value)))}?=`;
+    } catch {
+      return value;
+    }
+  }
+  return value;
+}
+
 export class NotifyPushClient {
   private serverUrl: string;
   private defaultTopic: string;
@@ -34,7 +48,7 @@ export class NotifyPushClient {
     }
 
     const headers: Record<string, string> = {
-      'Title': options.title,
+      'Title': encodeHeaderValue(options.title),
       'Priority': options.priority || 'default',
       'Content-Type': 'text/plain; charset=utf-8'
     };
