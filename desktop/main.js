@@ -447,13 +447,17 @@ function sendTestAlertFallback(url) {
 }
 
 function createWindow() {
+  const windowIconPath = process.platform === 'win32'
+    ? path.join(__dirname, 'assets', 'icon.ico')
+    : path.join(__dirname, 'assets', 'icon.png');
+
   mainWindow = new BrowserWindow({
     width: 480,
     height: 740,
     minWidth: 420,
     minHeight: 580,
     title: 'NotifyPush Desktop',
-    icon: path.join(__dirname, 'assets', 'icon.png'),
+    icon: windowIconPath,
     backgroundColor: '#0F172A',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
@@ -482,7 +486,9 @@ app.whenReady().then(() => {
   createWindow();
 
   // Create System Tray
-  const trayIconPath = path.join(__dirname, 'assets', 'icon.png');
+  const trayIconPath = process.platform === 'win32'
+    ? path.join(__dirname, 'assets', 'icon.ico')
+    : path.join(__dirname, 'assets', 'icon.png');
   tray = new Tray(trayIconPath);
   tray.setToolTip('NotifyPush - Real-Time Push Receiver');
   updateTrayMenu();

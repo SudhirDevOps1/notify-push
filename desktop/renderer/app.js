@@ -118,14 +118,25 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       let linkHtml = '';
       if (item.clickUrl) {
-        linkHtml = `<a class="notif-link" data-url="${escapeHtml(item.clickUrl)}">🔗 Open Link</a>`;
+        linkHtml = `<a class="notif-link" data-url="${escapeHtml(item.clickUrl)}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -1px; margin-right: 4px;"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>Open Link</a>`;
       }
+
+      const topicBadgeHtml = item.topic ? `
+        <span class="notif-topic">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -1px; margin-right: 3px;">
+            <path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9"></path>
+            <path d="M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.5"></path>
+            <circle cx="12" cy="12" r="2"></circle>
+            <path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.5"></path>
+            <path d="M19.1 4.9C23 8.8 23 15.2 19.1 19.1"></path>
+          </svg>${escapeHtml(item.topic)}
+        </span>` : '';
 
       card.innerHTML = `
         <div class="notif-header">
           <span class="notif-title">${escapeHtml(item.title || 'Notification')}</span>
           <div style="display: flex; align-items: center; gap: 6px;">
-            ${item.topic ? `<span class="notif-topic">📡 ${escapeHtml(item.topic)}</span>` : ''}
+            ${topicBadgeHtml}
             <span class="notif-time">${dateStr}</span>
           </div>
         </div>
@@ -236,25 +247,25 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   btnWebSnippet.addEventListener('click', () => {
     snippetPreview.innerHTML = getSnippetCode();
-    modalWebSnippet.classList.add('active');
+    modalWebSnippet.classList.add('open', 'active');
   });
 
   btnCloseModal.addEventListener('click', () => {
-    modalWebSnippet.classList.remove('active');
+    modalWebSnippet.classList.remove('open', 'active');
   });
 
   modalWebSnippet.addEventListener('click', (e) => {
     if (e.target === modalWebSnippet) {
-      modalWebSnippet.classList.remove('active');
+      modalWebSnippet.classList.remove('open', 'active');
     }
   });
 
   btnCopyWebSnippet.addEventListener('click', () => {
     const textToCopy = snippetPreview.textContent;
     navigator.clipboard.writeText(textToCopy);
-    btnCopyWebSnippet.textContent = '✅ Copied!';
+    btnCopyWebSnippet.innerHTML = '✅ Copied!';
     setTimeout(() => {
-      btnCopyWebSnippet.textContent = '📋 Copy HTML Code';
+      btnCopyWebSnippet.innerHTML = '📋 Copy HTML Code';
     }, 2000);
   });
 });

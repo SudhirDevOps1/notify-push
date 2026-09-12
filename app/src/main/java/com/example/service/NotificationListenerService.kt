@@ -55,6 +55,7 @@ class NotificationListenerService : Service() {
         OkHttpClient.Builder()
             .readTimeout(0, TimeUnit.MILLISECONDS) // Indefinite read for SSE streaming
             .connectTimeout(15, TimeUnit.SECONDS)
+            .pingInterval(20, TimeUnit.SECONDS) // Ping keepalive every 20s to prevent NAT & Cloudflare timeouts
             .retryOnConnectionFailure(true)
             .build()
     }
@@ -136,6 +137,11 @@ class NotificationListenerService : Service() {
             retryAttempt = 0
         }
 
+        try {
+            eventSource?.cancel()
+        } catch (e: Exception) {}
+        eventSource = null
+
         connectionJob?.cancel()
         connectionJob = serviceScope.launch {
             val serverUrl = prefs.serverUrl
@@ -170,9 +176,6 @@ class NotificationListenerService : Service() {
 
             val request = requestBuilder.build()
 
-            // Close existing event source if any
-            eventSource?.cancel()
-
             val factory = EventSources.createFactory(okHttpClient)
             eventSource = factory.newEventSource(request, object : EventSourceListener() {
                 override fun onOpen(eventSource: EventSource, response: Response) {
@@ -188,9 +191,14 @@ class NotificationListenerService : Service() {
                 }
 
                 override fun onClosed(eventSource: EventSource) {
-                    Log.w(TAG, "SSE Closed cleanly by server")
-                    if (!isManuallyStopped) {
-                        scheduleReconnect()
+                    Log.w(TAG, "SSE Closed cleanly by server/proxy - refreshing connection")
+                    if (!isManuallyStopped && prefs.isServiceEnabled) {
+                        serviceScope.launch {
+                            delay(300)
+                            if (!isManuallyStopped && prefs.isServiceEnabled) {
+                                connectSse(resetBackoff = true)
+                            }
+                        }
                     }
                 }
 
@@ -340,6 +348,10 @@ class NotificationListenerService : Service() {
                 // Ignore
             }
         }
+        try {
+            okHttpClient.dispatcher.cancelAll()
+            okHttpClient.connectionPool.evictAll()
+        } catch (e: Exception) {}
         serviceScope.cancel()
     }
 

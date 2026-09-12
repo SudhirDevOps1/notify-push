@@ -11,6 +11,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -361,21 +362,28 @@ fun ConfigurationCard(
                     OutlinedButton(
                         onClick = onDisconnect,
                         shape = RoundedCornerShape(12.dp),
+                        contentPadding = PaddingValues(horizontal = 6.dp, vertical = 0.dp),
                         colors = ButtonDefaults.outlinedButtonColors(
                             contentColor = RoseError
                         ),
                         modifier = Modifier
                             .weight(1f)
-                            .height(50.dp)
+                            .height(48.dp)
                             .testTag("disconnect_button")
                     ) {
                         Icon(
                             imageVector = Icons.Default.PowerSettingsNew,
                             contentDescription = "Disconnect",
-                            modifier = Modifier.size(18.dp)
+                            modifier = Modifier.size(16.dp)
                         )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text("Disconnect", fontWeight = FontWeight.SemiBold)
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "Disconnect",
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 13.sp,
+                            maxLines = 1,
+                            softWrap = false
+                        )
                     }
                 } else {
                     Button(
@@ -384,21 +392,28 @@ fun ConfigurationCard(
                             onSaveAndConnect()
                         },
                         shape = RoundedCornerShape(12.dp),
+                        contentPadding = PaddingValues(horizontal = 6.dp, vertical = 0.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.primary
                         ),
                         modifier = Modifier
                             .weight(1f)
-                            .height(50.dp)
+                            .height(48.dp)
                             .testTag("save_and_connect_button")
                     ) {
                         Icon(
                             imageVector = Icons.Default.NotificationsActive,
                             contentDescription = "Save & Connect",
-                            modifier = Modifier.size(18.dp)
+                            modifier = Modifier.size(16.dp)
                         )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text("Save & Connect", fontWeight = FontWeight.SemiBold)
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "Save & Connect",
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 13.sp,
+                            maxLines = 1,
+                            softWrap = false
+                        )
                     }
                 }
 
@@ -410,28 +425,35 @@ fun ConfigurationCard(
                     },
                     enabled = !isTesting && topic.isNotBlank(),
                     shape = RoundedCornerShape(12.dp),
+                    contentPadding = PaddingValues(horizontal = 6.dp, vertical = 0.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.secondary
                     ),
                     modifier = Modifier
                         .weight(1f)
-                        .height(50.dp)
+                        .height(48.dp)
                         .testTag("send_test_button")
                 ) {
                     if (isTesting) {
                         CircularProgressIndicator(
                             color = MaterialTheme.colorScheme.onSecondary,
                             strokeWidth = 2.dp,
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(18.dp)
                         )
                     } else {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.Send,
                             contentDescription = "Send Test",
-                            modifier = Modifier.size(18.dp)
+                            modifier = Modifier.size(16.dp)
                         )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text("Send Test", fontWeight = FontWeight.SemiBold)
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "Send Test",
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 13.sp,
+                            maxLines = 1,
+                            softWrap = false
+                        )
                     }
                 }
             }
