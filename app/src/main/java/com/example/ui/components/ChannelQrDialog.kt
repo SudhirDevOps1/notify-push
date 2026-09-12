@@ -45,7 +45,8 @@ fun ChannelQrDialog(
     val context = LocalContext.current
     val effectiveServer = serverUrl.ifBlank { SecurityPreferences.DEFAULT_SERVER_URL }
     val encodedName = java.net.URLEncoder.encode(app.name, "UTF-8")
-    val channelUrl = "$effectiveServer/${app.topic}?name=$encodedName"
+    val pwdParam = if (!app.password.isNullOrBlank()) "&pwd=${java.net.URLEncoder.encode(app.password, "UTF-8")}" else ""
+    val channelUrl = "$effectiveServer/${app.topic}?name=$encodedName$pwdParam"
 
     var qrBitmap by remember(app.topic, effectiveServer) { mutableStateOf<android.graphics.Bitmap?>(null) }
     var isLoading by remember { mutableStateOf(true) }
@@ -136,11 +137,30 @@ fun ChannelQrDialog(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            text = app.name,
-                            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Text(
+                                text = app.name,
+                                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            if (!app.password.isNullOrBlank()) {
+                                Surface(
+                                    color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f),
+                                    shape = RoundedCornerShape(4.dp)
+                                ) {
+                                    Text(
+                                        text = "🔒 E2EE",
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
+                                    )
+                                }
+                            }
+                        }
                         Text(
                             text = "#${app.topic}",
                             fontFamily = FontFamily.Monospace,

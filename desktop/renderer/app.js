@@ -16,6 +16,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const formAddApp = document.getElementById('formAddApp');
   const inputNewAppName = document.getElementById('inputNewAppName');
   const inputNewAppTopic = document.getElementById('inputNewAppTopic');
+  const inputNewAppPassword = document.getElementById('inputNewAppPassword');
   const btnGenRandomTopic = document.getElementById('btnGenRandomTopic');
   const btnCancelAddApp = document.getElementById('btnCancelAddApp');
   const btnCancelAddApp2 = document.getElementById('btnCancelAddApp2');
@@ -110,6 +111,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           <div class="app-item-title">
             <span>🌐</span>
             <strong>${escapeHtml(app.name)}</strong>
+            ${app.password ? '<span class="badge-e2ee" title="Zero-Knowledge AES-256-GCM Encrypted Channel">🔒 E2EE</span>' : ''}
           </div>
           <span class="app-item-topic">#${escapeHtml(app.topic)}</span>
         </div>
@@ -200,6 +202,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     formAddApp.classList.add('collapsed');
     inputNewAppName.value = '';
     inputNewAppTopic.value = '';
+    if (inputNewAppPassword) inputNewAppPassword.value = '';
   }
 
   btnCancelAddApp.addEventListener('click', hideAddAppForm);
@@ -218,9 +221,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     e.preventDefault();
     const name = inputNewAppName.value.trim();
     const topic = inputNewAppTopic.value.trim();
+    const password = inputNewAppPassword ? inputNewAppPassword.value.trim() : '';
     if (!topic) return;
 
-    const res = await window.notifyPushApi.addApp({ name, topic });
+    const res = await window.notifyPushApi.addApp({ name, topic, password });
     if (res && res.success) {
       currentConfig.apps = res.apps;
       renderApps(res.apps);
@@ -480,7 +484,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     const activeServer = (targetApp?.serverUrl || currentConfig.serverUrl || 'https://ntfy.sh').trim();
     const activeTopic = (targetApp?.topic || 'my-website').trim();
     const activeToken = (targetApp?.token || currentConfig.token || '').trim();
+    const activePassword = (targetApp?.password || '').trim();
     const appName = targetApp?.name || 'Website';
+
+    let extraConfig = '';
+    if (activeToken) extraConfig += `,\n    token: '${activeToken}'`;
+    if (activePassword) extraConfig += `,\n    password: '${activePassword}' // 🔒 Zero-Knowledge AES-256-GCM E2EE`;
 
     const code = `&lt;!-- 1. Include NotifyPush Client --&gt;
 &lt;script src="https://cdn.jsdelivr.net/gh/SudhirDevOps1/notify-push@main/web/notifypush.js"&gt;&lt;/script&gt;
@@ -488,7 +497,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // 2. Initialize for: ${escapeHtml(appName)}
   const notify = new NotifyPush({
     serverUrl: '${activeServer}',
-    topic: '${activeTopic}'${activeToken ? `,\n    token: '${activeToken}'` : ''}
+    topic: '${activeTopic}'${extraConfig}
   });
 
   // 3. Send alerts anytime!
@@ -550,7 +559,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     qrModalAppTopic.textContent = '#' + app.topic;
 
     const server = (app.serverUrl || currentConfig.serverUrl || 'https://ntfy.sh').trim();
-    const payload = `${server}/${app.topic}?name=${encodeURIComponent(app.name || 'App')}`;
+    const pwdParam = app.password ? `&pwd=${encodeURIComponent(app.password)}` : '';
+    const payload = `${server}/${app.topic}?name=${encodeURIComponent(app.name || 'App')}${pwdParam}`;
     qrUrlInput.value = payload;
 
     qrImagePreview.style.display = 'none';

@@ -8,6 +8,7 @@ data class ChannelApp(
     val id: String = UUID.randomUUID().toString(),
     val name: String,
     val topic: String,
+    val password: String? = null,
     val createdAt: Long = System.currentTimeMillis()
 ) {
     fun toJson(): JSONObject {
@@ -15,6 +16,9 @@ data class ChannelApp(
             put("id", id)
             put("name", name)
             put("topic", topic)
+            if (!password.isNullOrBlank()) {
+                put("password", password)
+            }
             put("createdAt", createdAt)
         }
     }
@@ -25,6 +29,9 @@ data class ChannelApp(
                 id = json.optString("id", UUID.randomUUID().toString()),
                 name = json.optString("name", "Untitled App"),
                 topic = json.optString("topic", ""),
+                password = if (json.has("password") && !json.isNull("password")) {
+                    json.getString("password").trim().takeIf { it.isNotBlank() }
+                } else null,
                 createdAt = json.optLong("createdAt", System.currentTimeMillis())
             )
         }

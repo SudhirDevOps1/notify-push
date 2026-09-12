@@ -97,7 +97,7 @@ fun ConfigurationCard(
     onSaveAndConnect: () -> Unit,
     onDisconnect: () -> Unit,
     onSendTest: () -> Unit,
-    onAddApp: (name: String, topic: String) -> Unit = { _, _ -> },
+    onAddApp: (name: String, topic: String, password: String?) -> Unit = { _, _, _ -> },
     onDeleteApp: (id: String) -> Unit = {},
     onTestApp: (ChannelApp) -> Unit = {},
     onOpenCodeForApp: (ChannelApp) -> Unit = {},
@@ -112,6 +112,8 @@ fun ConfigurationCard(
 
     var newAppName by remember { mutableStateOf("") }
     var newAppTopic by remember { mutableStateOf("") }
+    var newAppPassword by remember { mutableStateOf("") }
+    var isNewAppPasswordVisible by remember { mutableStateOf(false) }
     var selectedQrApp by remember { mutableStateOf<ChannelApp?>(null) }
 
     ElevatedCard(
@@ -273,11 +275,29 @@ fun ConfigurationCard(
                                     .padding(horizontal = 12.dp, vertical = 10.dp)
                             ) {
                                 Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = app.name,
-                                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-                                        color = MaterialTheme.colorScheme.onSurface
-                                    )
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Text(
+                                            text = app.name,
+                                            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        )
+                                        if (!app.password.isNullOrBlank()) {
+                                            Spacer(modifier = Modifier.width(6.dp))
+                                            Surface(
+                                                shape = RoundedCornerShape(4.dp),
+                                                color = EmeraldSuccess.copy(alpha = 0.15f),
+                                                border = BorderStroke(1.dp, EmeraldSuccess.copy(alpha = 0.4f))
+                                            ) {
+                                                Text(
+                                                    text = "🔒 E2EE",
+                                                    fontSize = 9.sp,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = EmeraldSuccess,
+                                                    modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
+                                                )
+                                            }
+                                        }
+                                    }
                                     Text(
                                         text = "#${app.topic}",
                                         fontFamily = FontFamily.Monospace,
@@ -452,6 +472,38 @@ fun ConfigurationCard(
                         modifier = Modifier.fillMaxWidth()
                     )
 
+                    OutlinedTextField(
+                        value = newAppPassword,
+                        onValueChange = { newAppPassword = it },
+                        label = { Text("E2EE Passphrase 🔒 (Optional)") },
+                        placeholder = { Text("Zero-knowledge encryption password") },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.VpnKey,
+                                contentDescription = null,
+                                tint = if (newAppPassword.isNotBlank()) EmeraldSuccess else MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        },
+                        trailingIcon = {
+                            IconButton(onClick = { isNewAppPasswordVisible = !isNewAppPasswordVisible }) {
+                                Icon(
+                                    imageVector = if (isNewAppPasswordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                                    contentDescription = if (isNewAppPasswordVisible) "Hide password" else "Show password",
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        },
+                        visualTransformation = if (isNewAppPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Password,
+                            imeAction = ImeAction.Done
+                        ),
+                        singleLine = true,
+                        shape = RoundedCornerShape(10.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
                     Button(
                         onClick = {
                             keyboardController?.hide()
@@ -460,10 +512,12 @@ fun ConfigurationCard(
                                 "alerts-${UUID.randomUUID().toString().take(8)}"
                             }
                             val cleanTopic = SecurityPreferences.sanitizeTopic(rawTopic)
-                            onAddApp(trimmedName, cleanTopic)
-                            selectedQrApp = ChannelApp(name = trimmedName, topic = cleanTopic)
+                            val passToSave = newAppPassword.trim().takeIf { it.isNotBlank() }
+                            onAddApp(trimmedName, cleanTopic, passToSave)
+                            selectedQrApp = ChannelApp(name = trimmedName, topic = cleanTopic, password = passToSave)
                             newAppName = ""
                             newAppTopic = ""
+                            newAppPassword = ""
                         },
                         shape = RoundedCornerShape(10.dp),
                         modifier = Modifier.fillMaxWidth()

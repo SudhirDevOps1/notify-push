@@ -89,6 +89,11 @@
             </div>
           </div>
         </div>
+        <div class="input-group" style="margin-top: 4px;">
+          <label for="inputNewAppPassword">E2EE Passphrase 🔒 (Optional)</label>
+          <input type="password" id="inputNewAppPassword" placeholder="Zero-knowledge AES-256-GCM encryption key" />
+          <small style="font-size: 10px; color: var(--text-muted); margin-top: 2px;">Leave blank for standard notifications, or enter a secret key to encrypt alerts end-to-end.</small>
+        </div>
         <div class="add-app-actions">
           <button type="submit" class="btn-primary-sm">Save & Listen</button>
           <button type="button" id="btnCancelAddApp2" class="btn-secondary-sm">Cancel</button>

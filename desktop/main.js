@@ -5,6 +5,7 @@ const http = require('http');
 const https = require('https');
 const { spawn } = require('child_process');
 const QRCode = require('qrcode');
+const { decryptE2ee, encryptE2ee } = require('./crypto');
 
 let mainWindow = null;
 let tray = null;
@@ -365,8 +366,33 @@ function handleIncomingNotification(data) {
   let clickUrl = data.click || null;
   let actions = data.actions || [];
 
-  // If message itself is JSON encoded, unwrap it (e.g. from webhooks or raw JSON dispatches)
-  if (typeof message === 'string' && message.trim().startsWith('{') && message.trim().endsWith('}')) {
+  const topics = getTopics();
+  const itemTopic = data.topic || (topics.length > 0 ? topics[0] : '');
+  const matchedApp = getAppByTopic(itemTopic);
+  const appName = matchedApp ? matchedApp.name : itemTopic;
+
+  // Check for Zero-Knowledge E2EE payload
+  let isDecrypted = false;
+  const rawMsg = String(message || '');
+  if (rawMsg.trim().startsWith('{"_e2e"') || rawMsg.includes('"_e2e":1')) {
+    const appPassword = matchedApp?.password;
+    if (appPassword) {
+      const decrypted = decryptE2ee(rawMsg, appPassword);
+      if (decrypted) {
+        isDecrypted = true;
+        title = decrypted.title || 'Encrypted Alert';
+        message = decrypted.message;
+        if (decrypted.tags) tags = decrypted.tags;
+        if (decrypted.clickUrl) clickUrl = decrypted.clickUrl;
+      } else {
+        title = 'Encrypted Alert';
+        message = '⚠️ Passphrase mismatch: Unable to decrypt this alert.';
+      }
+    } else {
+      title = 'Encrypted Alert';
+      message = '⚠️ Passphrase required: Configure an E2EE password for this app.';
+    }
+  } else if (typeof message === 'string' && message.trim().startsWith('{') && message.trim().endsWith('}')) {
     try {
       const parsed = JSON.parse(message.trim());
       if (parsed.title) title = parsed.title;
@@ -377,11 +403,6 @@ function handleIncomingNotification(data) {
       if (parsed.actions) actions = parsed.actions;
     } catch (e) {}
   }
-
-  const topics = getTopics();
-  const itemTopic = data.topic || (topics.length > 0 ? topics[0] : '');
-  const matchedApp = getAppByTopic(itemTopic);
-  const appName = matchedApp ? matchedApp.name : itemTopic;
 
   // Rate limiting / Flood debounce protection
   const dedupeKey = `${itemTopic}::${title}::${String(message).slice(0, 60)}`;
@@ -415,6 +436,7 @@ function handleIncomingNotification(data) {
     message,
     topic: itemTopic,
     appName,
+    isE2ee: isDecrypted,
     priority,
     tags,
     clickUrl,
@@ -433,7 +455,9 @@ function handleIncomingNotification(data) {
 
   // Windows Native Toast Notification (Shows which app/topic sent it)
   if (Notification.isSupported()) {
-    const toastPrefix = appName ? `[${appName}] ` : (item.topic ? `[${item.topic}] ` : '');
+    const toastPrefix = isDecrypted
+      ? `🔒 [${appName}] `
+      : (appName ? `[${appName}] ` : (item.topic ? `[${item.topic}] ` : ''));
     const toastTitle = `${toastPrefix}${item.title}`;
     const notif = new Notification({
       title: toastTitle,
@@ -463,14 +487,24 @@ function sendAppTestAlert(targetApp) {
   const systemCurl = path.join(process.env.SystemRoot || 'C:\\Windows', 'System32', 'curl.exe');
   const curlExe = fs.existsSync(systemCurl) ? systemCurl : 'curl.exe';
 
+  let postTitle = `[${targetApp.name}] Live Alert 🔔`;
+  let postBody = `Push alert for ${targetApp.name} is working perfectly!`;
+  if (targetApp.password) {
+    postTitle = '🔒 Encrypted Alert';
+    postBody = encryptE2ee({
+      title: 'Live Alert 🔔',
+      message: `Push alert for ${targetApp.name} is working perfectly! [E2EE Verified]`
+    }, targetApp.password);
+  }
+
   const curlArgs = [
     '-s',
     '-X', 'POST',
     url,
-    '-H', `Title: [${targetApp.name}] Live Alert 🔔`,
+    '-H', `Title: ${postTitle}`,
     '-H', 'Priority: high',
     '-H', 'Tags: tada,white_check_mark',
-    '-d', `Push alert for ${targetApp.name} is working perfectly!`
+    '-d', postBody
   ];
   if (targetApp.token?.trim() || appConfig.token?.trim()) {
     curlArgs.push('-H', `Authorization: Bearer ${(targetApp.token || appConfig.token).trim()}`);
@@ -638,7 +672,8 @@ app.whenReady().then(() => {
       name: (newApp.name && newApp.name.trim()) ? newApp.name.trim() : 'Web App ' + ((appConfig.apps?.length || 0) + 1),
       topic: cleanTopic,
       serverUrl: newApp.serverUrl?.trim() || appConfig.serverUrl || 'https://ntfy.sh',
-      token: newApp.token?.trim() || ''
+      token: newApp.token?.trim() || '',
+      password: newApp.password?.trim() || ''
     };
     if (!Array.isArray(appConfig.apps)) appConfig.apps = [];
     appConfig.apps.push(appItem);

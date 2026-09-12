@@ -460,6 +460,19 @@ input[type="password"]:focus {
   width: fit-content;
 }
 
+.badge-e2ee {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10B981;
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 5px;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
 .app-item-actions {
   display: flex;
   align-items: center;

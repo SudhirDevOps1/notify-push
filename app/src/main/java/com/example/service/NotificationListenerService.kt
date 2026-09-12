@@ -256,10 +256,42 @@ class NotificationListenerService : Service() {
                     // Match incoming topic against user's configured web apps
                     val matchingApp = prefs.findAppByTopic(topic)
                     val appName = matchingApp?.name
+
+                    // Check for Zero-Knowledge E2EE payload
+                    var effectiveTitle = title
+                    var effectiveMessage = message
+                    var effectiveClickUrl = clickUrl
+                    var effectiveTagsList = tagsList
+                    var isDecrypted = false
+
+                    val isE2eeEnvelope = message.trim().startsWith("{\"_e2e\"") || message.contains("\"_e2e\":1")
+                    if (isE2eeEnvelope) {
+                        val appPassword = matchingApp?.password
+                        if (!appPassword.isNullOrBlank()) {
+                            val decrypted = com.example.crypto.E2eeHelper.decryptPayload(message, appPassword)
+                            if (decrypted != null) {
+                                isDecrypted = true
+                                effectiveTitle = decrypted.title ?: "Encrypted Alert"
+                                effectiveMessage = decrypted.message
+                                if (decrypted.clickUrl != null) effectiveClickUrl = decrypted.clickUrl
+                                if (decrypted.tags != null) effectiveTagsList = decrypted.tags.toMutableList()
+                            } else {
+                                effectiveTitle = "Encrypted Alert"
+                                effectiveMessage = "⚠️ Passphrase mismatch: Unable to decrypt this alert."
+                            }
+                        } else {
+                            effectiveTitle = "Encrypted Alert"
+                            effectiveMessage = "⚠️ Passphrase required: Configure an E2EE password for this app."
+                        }
+                    }
+
                     val formattedTitle = when {
-                        !appName.isNullOrBlank() && title.isNotBlank() -> "[$appName] $title"
+                        isDecrypted && !appName.isNullOrBlank() && effectiveTitle.isNotBlank() -> "🔒 [$appName] $effectiveTitle"
+                        isDecrypted && !appName.isNullOrBlank() -> "🔒 [$appName] New Alert"
+                        isDecrypted -> "🔒 $effectiveTitle"
+                        !appName.isNullOrBlank() && effectiveTitle.isNotBlank() -> "[$appName] $effectiveTitle"
                         !appName.isNullOrBlank() -> "[$appName] New Alert"
-                        title.isNotBlank() -> title
+                        effectiveTitle.isNotBlank() -> effectiveTitle
                         else -> ""
                     }
 
@@ -267,12 +299,12 @@ class NotificationListenerService : Service() {
                     val item = NotificationItem(
                         ntfyId = ntfyId,
                         title = formattedTitle,
-                        message = message,
+                        message = effectiveMessage,
                         topic = topic,
                         timestamp = timestamp,
-                        clickUrl = clickUrl,
+                        clickUrl = effectiveClickUrl,
                         priority = priority,
-                        tags = tagsString
+                        tags = effectiveTagsList.joinToString(",")
                     )
                     database.notificationDao().insertNotification(item)
 
@@ -280,10 +312,10 @@ class NotificationListenerService : Service() {
                     NotificationHelper.showNotification(
                         context = this@NotificationListenerService,
                         title = formattedTitle.ifBlank { null },
-                        message = message,
-                        clickUrl = clickUrl,
+                        message = effectiveMessage,
+                        clickUrl = effectiveClickUrl,
                         priority = priority,
-                        tags = tagsList,
+                        tags = effectiveTagsList,
                         topic = if (!appName.isNullOrBlank()) "$appName (#$topic)" else topic
                     )
                 }

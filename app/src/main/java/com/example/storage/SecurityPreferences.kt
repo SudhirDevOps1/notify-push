@@ -114,11 +114,12 @@ class SecurityPreferences(context: Context) {
         _topicFlow.value = combinedTopics
     }
 
-    fun addChannelApp(name: String, topic: String): ChannelApp {
+    fun addChannelApp(name: String, topic: String, password: String? = null): ChannelApp {
         val current = getChannelApps().toMutableList()
-        val trimmedTopic = topic.trim()
+        val trimmedTopic = sanitizeTopic(topic)
         val trimmedName = name.trim().ifBlank { "App ${current.size + 1}" }
-        val newApp = ChannelApp(name = trimmedName, topic = trimmedTopic)
+        val trimmedPass = password?.trim()?.takeIf { it.isNotBlank() }
+        val newApp = ChannelApp(name = trimmedName, topic = trimmedTopic, password = trimmedPass)
         current.add(newApp)
         saveChannelApps(current)
         return newApp

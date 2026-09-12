@@ -137,7 +137,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         config.serverUrl?.let { prefs.serverUrl = it }
         config.token?.let { prefs.token = it }
         if (!config.appName.isNullOrBlank()) {
-            val app = prefs.addChannelApp(config.appName, config.topic)
+            val app = prefs.addChannelApp(config.appName, config.topic, config.password)
             _testMessage.value = "Imported App '${app.name}' (#${app.topic}) via QR!"
         } else {
             prefs.topic = config.topic
@@ -171,14 +171,18 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         NotificationListenerService.stop(getApplication())
     }
 
-    fun addChannelApp(name: String, topic: String) {
+    fun addChannelApp(name: String, topic: String, password: String? = null) {
         val trimmedTopic = topic.trim()
         if (trimmedTopic.isBlank()) {
             _testMessage.value = "Topic cannot be empty"
             return
         }
-        val app = prefs.addChannelApp(name, trimmedTopic)
-        _testMessage.value = "Added app '${app.name}' (#${app.topic})"
+        val app = prefs.addChannelApp(name, trimmedTopic, password)
+        _testMessage.value = if (!app.password.isNullOrBlank()) {
+            "Added app '${app.name}' (#${app.topic}) with 🔒 E2EE enabled!"
+        } else {
+            "Added app '${app.name}' (#${app.topic})"
+        }
         if (prefs.isServiceEnabled) {
             NotificationListenerService.start(getApplication())
         }
@@ -199,18 +203,39 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             _isTesting.value = true
             _testMessage.value = null
 
+            val title = "Test Alert: ${app.name}"
+            val message = "Test alert from web app '${app.name}' (#${app.topic}). Real-time stream active!"
+            val tags = "bell,rocket,white_check_mark"
+
+            val bodyToSend: String
+            val titleToSend: String
+            if (!app.password.isNullOrBlank()) {
+                bodyToSend = com.example.crypto.E2eeHelper.encryptPayload(
+                    title = title,
+                    message = message,
+                    tags = listOf("bell", "rocket", "white_check_mark"),
+                    clickUrl = null,
+                    passphrase = app.password
+                )
+                titleToSend = "🔒 Encrypted Alert"
+            } else {
+                bodyToSend = message
+                titleToSend = title
+            }
+
             val result = NtfySender.sendTestNotification(
                 serverUrl = currentServer,
                 topic = app.topic,
                 token = currentToken.ifBlank { null },
-                title = "Test Alert: ${app.name}",
-                message = "Test alert from web app '${app.name}' (#${app.topic}). Real-time stream active!",
-                tags = "bell,rocket,white_check_mark"
+                title = titleToSend,
+                message = bodyToSend,
+                tags = tags
             )
 
             _isTesting.value = false
-            result.onSuccess { msg ->
-                _testMessage.value = "Sent test alert for '${app.name}'! Check drawer."
+            result.onSuccess { _ ->
+                val e2eTag = if (!app.password.isNullOrBlank()) " [🔒 E2EE Encrypted]" else ""
+                _testMessage.value = "Sent test alert for '${app.name}'$e2eTag! Check drawer."
             }.onFailure { err ->
                 _testMessage.value = "Test Failed: ${err.message}"
             }

@@ -7,7 +7,8 @@ data class ScannedNtfyConfig(
     val serverUrl: String? = null,
     val topic: String,
     val token: String? = null,
-    val appName: String? = null
+    val appName: String? = null,
+    val password: String? = null
 )
 
 object QrCodeParser {
@@ -36,7 +37,10 @@ object QrCodeParser {
                     val appName = if (json.has("name")) json.getString("name").trim().takeIf { it.isNotBlank() }
                                   else if (json.has("appName")) json.getString("appName").trim().takeIf { it.isNotBlank() }
                                   else null
-                    return ScannedNtfyConfig(serverUrl = server, topic = topic, token = token, appName = appName)
+                    val password = if (json.has("password")) json.getString("password").trim().takeIf { it.isNotBlank() }
+                                   else if (json.has("pwd")) json.getString("pwd").trim().takeIf { it.isNotBlank() }
+                                   else null
+                    return ScannedNtfyConfig(serverUrl = server, topic = topic, token = token, appName = appName, password = password)
                 }
             } catch (_: Exception) {
                 // Fall through
@@ -52,6 +56,7 @@ object QrCodeParser {
 
             val segments = pathPart.split("/").filter { it.isNotBlank() }
             val token = queryPart?.let { extractQueryParam(it, "token") ?: extractQueryParam(it, "auth") }
+            val password = queryPart?.let { extractQueryParam(it, "pwd") ?: extractQueryParam(it, "password") }
 
             return if (segments.size >= 2) {
                 val host = segments[0]
@@ -59,10 +64,11 @@ object QrCodeParser {
                 ScannedNtfyConfig(
                     serverUrl = "https://$host",
                     topic = topic,
-                    token = token
+                    token = token,
+                    password = password
                 )
             } else if (segments.size == 1) {
-                ScannedNtfyConfig(topic = segments[0], token = token)
+                ScannedNtfyConfig(topic = segments[0], token = token, password = password)
             } else {
                 null
             }
@@ -82,13 +88,17 @@ object QrCodeParser {
                 val appName = query?.let { extractQueryParam(it, "name") ?: extractQueryParam(it, "appName") }?.let {
                     try { java.net.URLDecoder.decode(it, "UTF-8") } catch (_: Exception) { it }
                 }
+                val password = query?.let { extractQueryParam(it, "pwd") ?: extractQueryParam(it, "password") }?.let {
+                    try { java.net.URLDecoder.decode(it, "UTF-8") } catch (_: Exception) { it }
+                }
 
                 if (path.isNotBlank()) {
                     return ScannedNtfyConfig(
                         serverUrl = serverUrl,
                         topic = path,
                         token = token,
-                        appName = appName
+                        appName = appName,
+                        password = password
                     )
                 }
             } catch (_: Exception) {

@@ -4,7 +4,7 @@
   "description": "Cross-Platform Push Notification Client & Receiver (Android, Desktop, Web SDK & Webhooks)",
   "private": true,
   "scripts": {
-    "test": "node --check desktop/main.js desktop/preload.js desktop/renderer/app.js webhooks/github-adapter.js webhooks/stripe-adapter.js webhooks/razorpay-adapter.js webhooks/shopify-adapter.js",
+    "test": "node --check desktop/main.js desktop/preload.js desktop/crypto.js desktop/renderer/app.js web/notifypush.js webhooks/github-adapter.js webhooks/stripe-adapter.js webhooks/razorpay-adapter.js webhooks/shopify-adapter.js",
     "prepare": "husky"
   },
   "repository": {
