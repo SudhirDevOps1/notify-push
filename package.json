@@ -1,0 +1,23 @@
+{
+  "name": "notify-push",
+  "version": "1.0.1",
+  "description": "Cross-Platform Push Notification Client & Receiver (Android, Desktop, Web SDK & Webhooks)",
+  "private": true,
+  "scripts": {
+    "test": "node --check desktop/main.js desktop/preload.js desktop/renderer/app.js webhooks/github-adapter.js webhooks/stripe-adapter.js webhooks/razorpay-adapter.js webhooks/shopify-adapter.js",
+    "prepare": "husky"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SudhirDevOps1/notify-push.git"
+  },
+  "keywords": [],
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/SudhirDevOps1/notify-push/issues"
+  },
+  "homepage": "https://github.com/SudhirDevOps1/notify-push#readme",
+  "devDependencies": {
+    "husky": "^9.1.7"
+  }
+}
