@@ -113,8 +113,16 @@ jobs:
             echo "Skipping NPM publish because secrets.NPM_TOKEN is empty."
           else
             echo "Publishing notifypush-client to NPM registry with tag: $NPM_TAG..."
-            npm publish --access public --tag "$NPM_TAG"
-            echo "Successfully published notifypush-client to NPM!"
+            OUTPUT=$(npm publish --access public --tag "$NPM_TAG" 2>&1) && echo "$OUTPUT" || {
+              EXIT_CODE=$?
+              echo "$OUTPUT"
+              if echo "$OUTPUT" | grep -q "previously published versions"; then
+                echo "::notice title=NPM Already Published::Version is already published on NPM. Continuing release pipeline."
+              else
+                exit $EXIT_CODE
+              fi
+            }
+            echo "Successfully handled NPM publish step!"
           fi
 
   create-github-release:
