@@ -1,0 +1,6 @@
+{
+  "name": "NotifyPush",
+  "description": "Custom real-time push notification receiver client for webhooks and websites via ntfy",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

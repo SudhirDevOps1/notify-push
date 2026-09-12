@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Centered notification bell icon with alert badge (scaled inside 66dp safe zone) -->
+    <!-- Broadcast ring arc left -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#818CF8"
+        android:strokeWidth="2.8"
+        android:strokeLineCap="round"
+        android:pathData="M 36,44 A 20,20 0 0,0 36,66" />
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#A5B4FC"
+        android:strokeWidth="2.2"
+        android:strokeLineCap="round"
+        android:pathData="M 30,38 A 28,28 0 0,0 30,72" />
+
+    <!-- Broadcast ring arc right -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#818CF8"
+        android:strokeWidth="2.8"
+        android:strokeLineCap="round"
+        android:pathData="M 72,44 A 20,20 0 0,1 72,66" />
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#A5B4FC"
+        android:strokeWidth="2.2"
+        android:strokeLineCap="round"
+        android:pathData="M 78,38 A 28,28 0 0,1 78,72" />
+
+    <!-- Bell Body -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M 54,34 C 52.34,34 51,35.34 51,37 L 51,38.1 C 46.4,39.6 43,43.9 43,49 L 43,62 L 39,66 L 39,68 L 69,68 L 69,66 L 65,62 L 65,49 C 65,43.9 61.6,39.6 57,38.1 L 57,37 C 57,35.34 55.66,34 54,34 Z" />
+
+    <!-- Bell Clapper -->
+    <path
+        android:fillColor="#E0E7FF"
+        android:pathData="M 54,73 C 56.2,73 58,71.2 58,69 L 50,69 C 50,71.2 51.8,73 54,73 Z" />
+
+    <!-- Active Pulse Badge at top-right of bell -->
+    <path
+        android:fillColor="#38BDF8"
+        android:pathData="M 64,38 A 4.5,4.5 0 1,0 73,38 A 4.5,4.5 0 1,0 64,38 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M 66.5,38 A 2,2 0 1,0 70.5,38 A 2,2 0 1,0 66.5,38 Z" />
+</vector>
