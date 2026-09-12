@@ -1,0 +1,30 @@
+{
+  "name": "@notifypush/sdk",
+  "version": "1.0.0",
+  "description": "Universal, lightweight, zero-dependency push notification client for NotifyPush and ntfy.sh",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "echo \"No test specified\" && exit 0"
+  },
+  "keywords": [
+    "notifypush",
+    "ntfy",
+    "push-notifications",
+    "alerts",
+    "webhook",
+    "sse",
+    "zero-dependency"
+  ],
+  "author": "SudhirDevOps1",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SudhirDevOps1/notify-push.git"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

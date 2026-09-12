@@ -1,0 +1,21 @@
+{
+  "name": "notifypush/client",
+  "description": "Universal, lightweight push notification client for NotifyPush and ntfy.sh",
+  "type": "library",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "SudhirDevOps1",
+      "email": "singhjgh30@gmail.com"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "NotifyPush\\": "src/"
+    }
+  },
+  "require": {
+    "php": ">=7.4",
+    "ext-curl": "*"
+  }
+}

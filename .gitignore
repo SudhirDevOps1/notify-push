@@ -16,3 +16,11 @@
 local.properties
 .env
 debug.keystore
+.build-outputs/
+*.apk
+*.aab
+node_modules/
+dist/
+__pycache__/
+*.pyc
+vendor/

@@ -1,0 +1,46 @@
+name: 'NotifyPush GitHub Action'
+description: 'Send instant heads-up push notifications to your Android device from GitHub Actions'
+author: 'SudhirDevOps1'
+inputs:
+  topic:
+    description: 'Secret topic name configured in NotifyPush app'
+    required: true
+  title:
+    description: 'Notification title'
+    required: true
+  message:
+    description: 'Notification message body'
+    required: true
+  priority:
+    description: 'Alert priority (min, low, default, high, urgent)'
+    required: false
+    default: 'default'
+  tags:
+    description: 'Comma-separated emoji tags (e.g. rocket,white_check_mark)'
+    required: false
+    default: 'octocat'
+  server:
+    description: 'ntfy server URL'
+    required: false
+    default: 'https://ntfy.sh'
+  token:
+    description: 'Bearer authentication token if using access controls'
+    required: false
+runs:
+  using: 'composite'
+  steps:
+    - shell: bash
+      run: |
+        AUTH_HEADER=()
+        if [ -n "${{ inputs.token }}" ]; then
+          AUTH_HEADER=(-H "Authorization: Bearer ${{ inputs.token }}")
+        fi
+        curl -s -m 8 -X POST "${{ inputs.server }}/${{ inputs.topic }}" \
+          -H "Title: ${{ inputs.title }}" \
+          -H "Priority: ${{ inputs.priority }}" \
+          -H "Tags: ${{ inputs.tags }}" \
+          "${AUTH_HEADER[@]}" \
+          -d "${{ inputs.message }}"
+branding:
+  icon: 'bell'
+  color: 'blue'
