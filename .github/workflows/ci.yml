@@ -65,3 +65,7 @@ jobs:
       - name: Build TypeScript SDK
         working-directory: sdk/typescript
         run: npm run build
+
+      - name: Test TypeScript SDK
+        working-directory: sdk/typescript
+        run: npm test

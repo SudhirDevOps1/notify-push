@@ -1,4 +1,4 @@
-# @notifypush/sdk (TypeScript & JavaScript)
+# notifypush-client (TypeScript & JavaScript)
 
 Production-grade, zero-heavy-dependency push notification client for Next.js, Node.js, Express, Fastify, and Cloudflare Workers.
 
@@ -7,11 +7,11 @@ Production-grade, zero-heavy-dependency push notification client for Next.js, No
 ## Installation
 
 ```bash
-npm install @notifypush/sdk
+npm install notifypush-client
 # or
-pnpm add @notifypush/sdk
+pnpm add notifypush-client
 # or
-yarn add @notifypush/sdk
+yarn add notifypush-client
 ```
 
 ---

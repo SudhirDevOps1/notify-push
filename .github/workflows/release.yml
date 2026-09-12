@@ -6,6 +6,11 @@ on:
       - 'v*'
   workflow_dispatch:
     inputs:
+      release_tag:
+        description: 'Release Tag (e.g. v1.0.0)'
+        required: true
+        default: 'v1.0.0'
+        type: string
       npm_tag:
         description: 'NPM distribution tag (e.g. latest, beta, next)'
         required: true
@@ -93,6 +98,10 @@ jobs:
         working-directory: sdk/typescript
         run: npm run build
 
+      - name: Run TypeScript SDK Tests
+        working-directory: sdk/typescript
+        run: npm test
+
       - name: Publish to NPM Registry
         working-directory: sdk/typescript
         env:
@@ -103,16 +112,16 @@ jobs:
             echo "::warning title=NPM_TOKEN Missing::NPM_TOKEN secret is not set in Repository Secrets. Skipping npm publish. Add NPM_TOKEN in GitHub Settings > Secrets and variables > Actions."
             echo "Skipping NPM publish because secrets.NPM_TOKEN is empty."
           else
-            echo "Publishing @notifypush/sdk to NPM registry with tag: $NPM_TAG..."
+            echo "Publishing notifypush-client to NPM registry with tag: $NPM_TAG..."
             npm publish --access public --tag "$NPM_TAG"
-            echo "Successfully published @notifypush/sdk to NPM!"
+            echo "Successfully published notifypush-client to NPM!"
           fi
 
   create-github-release:
     name: Create GitHub Release
     needs: [build-android, publish-npm]
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
     steps:
       - uses: actions/checkout@v4
 
@@ -125,6 +134,8 @@ jobs:
       - name: Create GitHub Release with Assets
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ github.ref_type == 'tag' && github.ref_name || inputs.release_tag }}
+          name: Release ${{ github.ref_type == 'tag' && github.ref_name || inputs.release_tag }}
           files: release-artifacts/NotifyPush-debug.apk
           generate_release_notes: true
           draft: false
