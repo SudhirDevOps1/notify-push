@@ -135,9 +135,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun applyScannedConfig(config: com.example.ui.qr.ScannedNtfyConfig) {
         config.serverUrl?.let { prefs.serverUrl = it }
-        prefs.topic = config.topic
         config.token?.let { prefs.token = it }
-        _testMessage.value = "Imported config: topic '${config.topic}'"
+        if (!config.appName.isNullOrBlank()) {
+            val app = prefs.addChannelApp(config.appName, config.topic)
+            _testMessage.value = "Imported App '${app.name}' (#${app.topic}) via QR!"
+        } else {
+            prefs.topic = config.topic
+            _testMessage.value = "Imported config: topic '${config.topic}'"
+        }
         // Auto connect if topic is valid
         if (config.topic.isNotBlank()) {
             saveAndConnect()

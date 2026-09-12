@@ -4,6 +4,7 @@ const fs = require('fs');
 const http = require('http');
 const https = require('https');
 const { spawn } = require('child_process');
+const QRCode = require('qrcode');
 
 let mainWindow = null;
 let tray = null;
@@ -691,6 +692,24 @@ app.whenReady().then(() => {
   ipcMain.handle('open-external', (event, url) => {
     if (url && (url.startsWith('http://') || url.startsWith('https://'))) {
       shell.openExternal(url);
+    }
+  });
+
+  ipcMain.handle('generate-qr-data-url', async (event, text) => {
+    try {
+      if (!text) return null;
+      return await QRCode.toDataURL(text, {
+        errorCorrectionLevel: 'M',
+        margin: 2,
+        width: 320,
+        color: {
+          dark: '#000000',
+          light: '#ffffff'
+        }
+      });
+    } catch (err) {
+      console.error('Failed to generate QR code data URL:', err);
+      return null;
     }
   });
 });

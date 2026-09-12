@@ -36,6 +36,7 @@ import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.material.icons.filled.PowerSettingsNew
+import androidx.compose.material.icons.filled.QrCode2
 import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.filled.Visibility
@@ -111,6 +112,7 @@ fun ConfigurationCard(
 
     var newAppName by remember { mutableStateOf("") }
     var newAppTopic by remember { mutableStateOf("") }
+    var selectedQrApp by remember { mutableStateOf<ChannelApp?>(null) }
 
     ElevatedCard(
         shape = RoundedCornerShape(20.dp),
@@ -288,6 +290,19 @@ fun ConfigurationCard(
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.spacedBy(4.dp)
                                 ) {
+                                    // 0. QR Code Button
+                                    IconButton(
+                                        onClick = { selectedQrApp = app },
+                                        modifier = Modifier.size(32.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.QrCode2,
+                                            contentDescription = "Show QR for ${app.name}",
+                                            tint = MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                    }
+
                                     // 1. Copy / View Snippet Button
                                     IconButton(
                                         onClick = { onOpenCodeForApp(app) },
@@ -441,10 +456,12 @@ fun ConfigurationCard(
                         onClick = {
                             keyboardController?.hide()
                             val trimmedName = newAppName.trim().ifBlank { "Web App ${channelApps.size + 1}" }
-                            val trimmedTopic = newAppTopic.trim().ifBlank {
+                            val rawTopic = newAppTopic.trim().ifBlank {
                                 "alerts-${UUID.randomUUID().toString().take(8)}"
                             }
-                            onAddApp(trimmedName, trimmedTopic)
+                            val cleanTopic = SecurityPreferences.sanitizeTopic(rawTopic)
+                            onAddApp(trimmedName, cleanTopic)
+                            selectedQrApp = ChannelApp(name = trimmedName, topic = cleanTopic)
                             newAppName = ""
                             newAppTopic = ""
                         },
@@ -691,5 +708,13 @@ fun ConfigurationCard(
                 }
             }
         }
+    }
+
+    selectedQrApp?.let { app ->
+        ChannelQrDialog(
+            app = app,
+            serverUrl = serverUrl,
+            onDismissRequest = { selectedQrApp = null }
+        )
     }
 }

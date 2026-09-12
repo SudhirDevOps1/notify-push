@@ -6,7 +6,8 @@ import java.net.URI
 data class ScannedNtfyConfig(
     val serverUrl: String? = null,
     val topic: String,
-    val token: String? = null
+    val token: String? = null,
+    val appName: String? = null
 )
 
 object QrCodeParser {
@@ -14,10 +15,10 @@ object QrCodeParser {
     /**
      * Parses raw scanned QR code text into Ntfy configuration.
      * Supports:
-     * 1. Full URL: "https://ntfy.sh/my-topic" or "https://ntfy.mydomain.com:8443/alerts"
+     * 1. Full URL: "https://ntfy.sh/my-topic" or "https://ntfy.mydomain.com:8443/alerts?name=Store"
      * 2. URL with token: "https://ntfy.sh/my-topic?auth=tk_123" or "?token=tk_123"
      * 3. Custom scheme: "ntfy://ntfy.sh/my-topic" or "ntfy://my-topic"
-     * 4. JSON payload: {"server": "https://ntfy.sh", "topic": "my-topic", "token": "xyz"}
+     * 4. JSON payload: {"server": "https://ntfy.sh", "topic": "my-topic", "name": "Store", "token": "xyz"}
      * 5. Plain text topic: "my-topic-1234"
      */
     fun parse(rawText: String): ScannedNtfyConfig? {
@@ -32,7 +33,10 @@ object QrCodeParser {
                 if (topic.isNotBlank()) {
                     val server = if (json.has("server")) json.getString("server").trim().takeIf { it.isNotBlank() } else null
                     val token = if (json.has("token")) json.getString("token").trim().takeIf { it.isNotBlank() } else null
-                    return ScannedNtfyConfig(serverUrl = server, topic = topic, token = token)
+                    val appName = if (json.has("name")) json.getString("name").trim().takeIf { it.isNotBlank() }
+                                  else if (json.has("appName")) json.getString("appName").trim().takeIf { it.isNotBlank() }
+                                  else null
+                    return ScannedNtfyConfig(serverUrl = server, topic = topic, token = token, appName = appName)
                 }
             } catch (_: Exception) {
                 // Fall through
@@ -75,12 +79,16 @@ object QrCodeParser {
                 val path = javaUri.path?.trim('/') ?: ""
                 val query = javaUri.query
                 val token = query?.let { extractQueryParam(it, "token") ?: extractQueryParam(it, "auth") }
+                val appName = query?.let { extractQueryParam(it, "name") ?: extractQueryParam(it, "appName") }?.let {
+                    try { java.net.URLDecoder.decode(it, "UTF-8") } catch (_: Exception) { it }
+                }
 
                 if (path.isNotBlank()) {
                     return ScannedNtfyConfig(
                         serverUrl = serverUrl,
                         topic = path,
-                        token = token
+                        token = token,
+                        appName = appName
                     )
                 }
             } catch (_: Exception) {

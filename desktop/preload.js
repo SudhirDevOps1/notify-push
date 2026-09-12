@@ -13,6 +13,7 @@ contextBridge.exposeInMainWorld('notifyPushApi', {
   openExternal: (url) => ipcRenderer.invoke('open-external', url),
   getAutoStart: () => ipcRenderer.invoke('get-autostart'),
   setAutoStart: (enable) => ipcRenderer.invoke('set-autostart', enable),
+  generateQrCode: (text) => ipcRenderer.invoke('generate-qr-data-url', text),
   onNotification: (callback) => {
     ipcRenderer.on('new-notification', (event, data) => callback(data));
   },

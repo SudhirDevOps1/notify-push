@@ -114,6 +114,9 @@ document.addEventListener('DOMContentLoaded', async () => {
           <span class="app-item-topic">#${escapeHtml(app.topic)}</span>
         </div>
         <div class="app-item-actions">
+          <button class="app-action-btn btn-app-qr" title="Show QR Code for this Channel" data-id="${app.id}">
+            📷 QR
+          </button>
           <button class="app-action-btn btn-app-code" title="Copy Website Snippet for this App" data-id="${app.id}">
             📋 Code
           </button>
@@ -135,6 +138,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     // Wire action buttons
+    appsList.querySelectorAll('.btn-app-qr').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.getAttribute('data-id');
+        const targetApp = appItems.find(a => a.id === id);
+        if (targetApp) {
+          openQrModalForApp(targetApp);
+        }
+      });
+    });
+
     appsList.querySelectorAll('.btn-app-code').forEach(btn => {
       btn.addEventListener('click', () => {
         const id = btn.getAttribute('data-id');
@@ -212,6 +225,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       currentConfig.apps = res.apps;
       renderApps(res.apps);
       hideAddAppForm();
+      if (res.app) {
+        openQrModalForApp(res.app);
+      }
     }
   });
 
@@ -510,5 +526,78 @@ document.addEventListener('DOMContentLoaded', async () => {
     setTimeout(() => {
       btnCopyWebSnippet.innerHTML = '📋 Copy HTML Code';
     }, 2000);
+  });
+
+  // 9. QR Code Modal Logic
+  const modalQrCode = document.getElementById('modalQrCode');
+  const qrModalAppName = document.getElementById('qrModalAppName');
+  const qrModalAppTopic = document.getElementById('qrModalAppTopic');
+  const qrImagePreview = document.getElementById('qrImagePreview');
+  const qrLoadingSpinner = document.getElementById('qrLoadingSpinner');
+  const qrUrlInput = document.getElementById('qrUrlInput');
+  const btnCopyQrUrl = document.getElementById('btnCopyQrUrl');
+  const btnDownloadQr = document.getElementById('btnDownloadQr');
+  const btnCloseQrModal = document.getElementById('btnCloseQrModal');
+  const btnCloseQrModalBottom = document.getElementById('btnCloseQrModalBottom');
+
+  let currentQrDataUrl = null;
+  let currentQrTargetApp = null;
+
+  async function openQrModalForApp(app) {
+    if (!app) return;
+    currentQrTargetApp = app;
+    qrModalAppName.textContent = app.name || 'Web App';
+    qrModalAppTopic.textContent = '#' + app.topic;
+
+    const server = (app.serverUrl || currentConfig.serverUrl || 'https://ntfy.sh').trim();
+    const payload = `${server}/${app.topic}?name=${encodeURIComponent(app.name || 'App')}`;
+    qrUrlInput.value = payload;
+
+    qrImagePreview.style.display = 'none';
+    qrLoadingSpinner.textContent = 'Generating QR Code...';
+    qrLoadingSpinner.style.display = 'block';
+    modalQrCode.classList.add('open', 'active');
+
+    try {
+      const dataUrl = await window.notifyPushApi.generateQrCode(payload);
+      if (dataUrl) {
+        currentQrDataUrl = dataUrl;
+        qrImagePreview.src = dataUrl;
+        qrLoadingSpinner.style.display = 'none';
+        qrImagePreview.style.display = 'block';
+      } else {
+        qrLoadingSpinner.textContent = 'Failed to generate QR Code';
+      }
+    } catch (err) {
+      console.error('QR generation error:', err);
+      qrLoadingSpinner.textContent = 'Error generating QR Code';
+    }
+  }
+
+  function closeQrModal() {
+    modalQrCode.classList.remove('open', 'active');
+  }
+
+  btnCloseQrModal.addEventListener('click', closeQrModal);
+  btnCloseQrModalBottom.addEventListener('click', closeQrModal);
+  modalQrCode.addEventListener('click', (e) => {
+    if (e.target === modalQrCode) closeQrModal();
+  });
+
+  btnCopyQrUrl.addEventListener('click', () => {
+    navigator.clipboard.writeText(qrUrlInput.value);
+    btnCopyQrUrl.textContent = '✅ Copied!';
+    setTimeout(() => { btnCopyQrUrl.textContent = '📋 Copy Link'; }, 1800);
+  });
+
+  btnDownloadQr.addEventListener('click', () => {
+    if (!currentQrDataUrl) return;
+    const a = document.createElement('a');
+    a.href = currentQrDataUrl;
+    const cleanName = (currentQrTargetApp?.name || 'app').toLowerCase().replace(/[^a-z0-9]/g, '-');
+    a.download = `notifypush-${cleanName}-qr.png`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
   });
 });

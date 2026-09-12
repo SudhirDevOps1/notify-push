@@ -836,3 +836,110 @@ input[type="password"]:focus {
   padding: 1px 6px;
   border-radius: 10px;
 }
+
+/* QR Code Modal & Button Styles */
+.btn-app-qr {
+  background: rgba(56, 189, 248, 0.15) !important;
+  color: #38BDF8 !important;
+  border-color: rgba(56, 189, 248, 0.3) !important;
+}
+.btn-app-qr:hover {
+  background: rgba(56, 189, 248, 0.28) !important;
+}
+
+.modal-qr-card {
+  max-width: 380px !important;
+}
+
+.qr-content-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.qr-app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid var(--border-color);
+  padding: 8px 12px;
+  border-radius: 8px;
+}
+
+.qr-app-name {
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--text-primary);
+}
+
+.qr-app-topic {
+  font-family: monospace;
+  font-size: 11px;
+  color: var(--primary-light);
+  background: rgba(99, 102, 241, 0.15);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.qr-image-container {
+  width: 220px;
+  height: 220px;
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  margin: 4px 0;
+}
+
+.qr-image-container img {
+  width: 200px;
+  height: 200px;
+  object-fit: contain;
+  border-radius: 6px;
+}
+
+.qr-loading {
+  font-size: 12px;
+  color: #475569;
+  text-align: center;
+  font-weight: 500;
+}
+
+.qr-url-box {
+  display: flex;
+  width: 100%;
+  gap: 6px;
+}
+
+.qr-url-box input {
+  flex: 1;
+  background: #090D16;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 11px;
+  font-family: monospace;
+  color: var(--text-secondary);
+}
+
+.qr-url-box .btn-copy {
+  margin-top: 0;
+  width: auto;
+  padding: 6px 12px;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.qr-actions-row {
+  display: flex;
+  width: 100%;
+  gap: 8px;
+  margin-top: 4px;
+}
