@@ -141,3 +141,9 @@ dependencies {
   "ksp"(libs.androidx.room.compiler)
   "ksp"(libs.moshi.kotlin.codegen)
 }
+
+// Disable KSP processing on Unit Test sources since test code does not define Room entities or Moshi models
+// This prevents headless CI runner crashes caused by KSP's internal IntelliJ ApplicationManager
+tasks.matching { it.name.contains("ksp") && it.name.contains("UnitTest") }.configureEach {
+  enabled = false
+}

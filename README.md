@@ -1,87 +1,121 @@
 # 🔔 NotifyPush
 
 <p align="center">
-  <img src="public/hero_banner.png" alt="NotifyPush Hero" width="720" style="border-radius: 12px;"/>
+  <img src="public/hero_banner.svg" alt="NotifyPush Hero Banner" width="100%" />
 </p>
 
 <p align="center">
-  <b>The Lightweight, Privacy-First, Zero-Telemetry Push Notification Dispatcher & Mobile Receiver</b>
+  <b>The Lightweight, Privacy-First, Zero-Telemetry Push Notification Dispatcher &amp; Mobile Receiver</b>
 </p>
 
 <p align="center">
-  <a href="https://github.com/SudhirDevOps1/notify-push/actions"><img src="https://img.shields.io/badge/build-passing-brightgreen?style=flat-square" alt="Build Status"/></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="License"/></a>
-  <a href="https://developer.android.com/"><img src="https://img.shields.io/badge/platform-Android%208.0%2B-green?style=flat-square" alt="Platform"/></a>
-  <a href="#-sdk-toolkit"><img src="https://img.shields.io/badge/SDKs-Node%20%7C%20Python%20%7C%20PHP%20%7C%20Go%20%7C%20Bash-orange?style=flat-square" alt="SDKs"/></a>
-  <a href="#-security--privacy-architecture"><img src="https://img.shields.io/badge/telemetry-ZERO-red?style=flat-square" alt="Zero Telemetry"/></a>
+  <a href="https://github.com/SudhirDevOps1/notify-push/actions/workflows/ci.yml"><img src="https://img.shields.io/badge/CI%20Build-passing-brightgreen?style=for-the-badge&logo=githubactions&logoColor=white" alt="CI Status"/></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=for-the-badge" alt="License"/></a>
+  <a href="https://developer.android.com/"><img src="https://img.shields.io/badge/Android-8.0%2B-green?style=for-the-badge&logo=android&logoColor=white" alt="Platform"/></a>
+  <a href="#-sdk-toolkit"><img src="https://img.shields.io/badge/SDKs-TS%20%7C%20Python%20%7C%20PHP%20%7C%20Go%20%7C%20Bash-orange?style=for-the-badge" alt="SDKs"/></a>
+  <a href="docs/README.hinglish.md"><img src="https://img.shields.io/badge/Language-%F0%9F%87%AE%F0%9F%87%B3%20Hinglish%20Guide-red?style=for-the-badge" alt="Hinglish Guide"/></a>
 </p>
 
 ---
 
-## 🌟 Overview
+## 🌐 Language Guides / भाषा चुनें
 
-**NotifyPush** turns any website, serverless function, backend API, database trigger, or DevOps script into instant, real-time Heads-Up Push Notifications on your Android device — **with zero third-party dependencies, no Firebase/FCM lock-in, and 100% privacy.**
-
-Unlike proprietary push services that monetize your notification payloads and metadata, **NotifyPush** connects directly over TLS SSE (Server-Sent Events) or WebSockets to [ntfy.sh](https://ntfy.sh) or your own self-hosted private Docker gateway.
-
----
-
-## 🚀 Key Features
-
-- ⚡ **Instant Webhook to Phone**: Fire a simple HTTP POST request from any language/framework and receive a native heads-up notification in `< 500ms`.
-- 🛡️ **Zero Telemetry & 100% Local-First**: No analytics, no ad SDKs, no trackers. Logs are stored exclusively in an on-device local Room SQLite database.
-- 🔄 **24/7 Resilient Daemon Service**: Runs as a persistent Android foreground service with automatic exponential reconnection on network drops.
-- ⚡ **Boot Auto-Start**: Automatically re-establishes SSE listener streams after phone restart (`RECEIVE_BOOT_COMPLETED`).
-- 📷 **Instant QR Code Scanner**: Scan camera QR codes from web consoles to configure topic, server URL, and auth tokens in 1 second.
-- 🔍 **Real-Time Log Search & Filter**: Substring search by keyword, filter for urgent alerts (`Priority 4+`), or filter for links.
-- 📋 **One-Tap Actions**: Copy notification text, share via system chooser, or open attached deep-links.
-- 📦 **Universal Multi-Language SDKs**: Native, zero-heavy-dependency SDKs for TypeScript, Python, PHP, Go, and Shell/cURL.
+- 🇬🇧 **[English Documentation (Default)](#-table-of-contents)**
+- 🇮🇳 **[Hinglish संपूर्ण गाइड (हिंदी / English)](docs/README.hinglish.md)** — *Step-by-step saral bhasha me setup aur implementation guide.*
 
 ---
 
-## 📁 Repository Structure
+## 📑 Table of Contents
 
-```
-notify-push/
-├── app/                          # Native Android Jetpack Compose Application
-│   ├── src/main/java/com/example
-│   │   ├── service/              # 24/7 Foreground SSE Listener Daemon
-│   │   ├── network/              # SSE Stream Parser & OkHttp Engine
-│   │   ├── ui/                   # Jetpack Compose M3 Views & ViewModels
-│   │   ├── data/                 # Local Room SQLite Database (Zero-telemetry)
-│   │   └── qr/                   # CameraX QR Code Scanner
-├── sdk/                          # Universal Multi-Platform Client Libraries
-│   ├── typescript/               # Next.js, React, Node.js, Express (@notifypush/sdk)
-│   ├── python/                   # Python package (FastAPI, Django, Flask)
-│   ├── php/                      # PHP Composer package (Laravel, WordPress)
-│   ├── go/                       # Golang microservice client
-│   └── cli/                      # Bash script & GitHub Action workflow
-├── ENTERPRISE_ARCHITECTURE.md    # Production E2EE & Outbox Schema Blueprint
-├── LICENSE                       # MIT License
-└── README.md
-```
+1. [Overview & Motivation](#-overview--motivation)
+2. [Why NotifyPush vs. Firebase/FCM?](#-why-notifypush-vs-firebasefcm)
+3. [Quick Start in 60 Seconds](#-quick-start-in-60-seconds)
+4. [Universal SDK Toolkit](#-universal-sdk-toolkit)
+   - [TypeScript / Node.js / Next.js](#1-typescript--nodejs--nextjs)
+   - [Python (FastAPI, Django, Flask)](#2-python-fastapi-django-flask)
+   - [PHP (Laravel, Core PHP)](#3-php-laravel-core-php)
+   - [Go (Golang Microservices)](#4-go-golang-microservices)
+   - [CLI & GitHub Actions](#5-cli--github-actions-workflow)
+5. [Android Mobile App](#-android-mobile-app)
+   - [Camera QR Code Scanner](#instant-qr-code-scanner)
+   - [24/7 Resilient Daemon Service](#247-resilient-background-daemon)
+   - [Battery Optimization Setup](#battery-optimization-setup)
+6. [Self-Hosting with Docker](#-self-hosting-with-docker)
+7. [Security & End-to-End Encryption](#-security--end-to-end-encryption)
+8. [Documentation Index](#-documentation-index)
+9. [Contributing & License](#-contributing--license)
 
 ---
 
-## 📦 SDK Toolkit
+## 🌟 Overview & Motivation
 
-### 1. TypeScript / JavaScript (Next.js, Node.js, React)
+**NotifyPush** turns any website, backend API, serverless function, database trigger, or DevOps script into instant, real-time Heads-Up Push Notifications on your Android device — **in less than 500ms, with zero third-party dependencies, no Firebase/FCM lock-in, and 100% privacy.**
+
+Most modern push notification providers require:
+- Complex Google Cloud Console / Firebase projects and credentials (`google-services.json`).
+- Heavy proprietary client libraries that monitor user behavior and collect device telemetry.
+- Expensive monthly pricing tiers once notification volume scales.
+
+**NotifyPush completely changes this paradigm:**
+It establishes a lightweight, direct TLS Server-Sent Events (SSE) or WebSocket connection between your Android phone and your chosen gateway (either the free public [ntfy.sh](https://ntfy.sh) instance or your own self-hosted private Docker container).
+
+---
+
+## ⚡ Why NotifyPush vs. Firebase/FCM?
+
+| Capability | NotifyPush | Firebase Cloud Messaging (FCM) | OneSignal / Pusher |
+|---|---|---|---|
+| **Account Requirement** | ❌ None (zero signup needed) | ✔️ Google Cloud account mandatory | ✔️ Paid registration required |
+| **Setup Time** | ⚡ **1 minute** | ⏱️ 30+ minutes | ⏱️ 20+ minutes |
+| **Privacy & Telemetry** | 🛡️ **Zero Telemetry** (100% on-device) | ⚠️ Google server logging & analytics | ⚠️ Third-party tracking SDKs |
+| **Self-Hosting** | ✔️ **Full Docker support** | ❌ Cloud-locked | ❌ Cloud-locked |
+| **Delivery Latency** | ⚡ **< 500ms** (direct SSE stream) | ⏱️ 2s – 30s queue delays | ⏱️ 1s – 10s |
+| **Cost** | 🆓 **100% Free & Open Source** | ⚠️ Billed at high scale | ⚠️ Steep monthly subscriptions |
+
+---
+
+## 🚀 Quick Start in 60 Seconds
+
+### Step 1: Open the Android App
+Set your private topic name in the app (for example: `my-private-alerts-9901`) and tap **"Save & Connect"**. The status bar turns green: **"Listening (Active)"**.
+
+### Step 2: Fire an Alert from Terminal
+Open your terminal and run this single command:
 
 ```bash
-cd sdk/typescript
-npm install
-npm run build
+curl -X POST "https://ntfy.sh/my-private-alerts-9901" \
+  -H "Title: 🚀 Alert Delivered" \
+  -H "Priority: high" \
+  -H "Tags: bell,white_check_mark" \
+  -d "NotifyPush is working! Zero config, pure speed."
+```
+
+**Result:** Within 250ms, your Android phone rings, vibrates, and displays a native heads-up card!
+
+---
+
+## 📦 Universal SDK Toolkit
+
+All SDKs live directly in the `/sdk` directory and are designed with **zero heavy dependencies** and fail-safe, non-crashing execution.
+
+### 1. TypeScript / Node.js / Next.js
+*Deep Dive:* **[TypeScript SDK Documentation](docs/SDK_TYPESCRIPT.md)**
+
+```bash
+npm install @notifypush/sdk
 ```
 
 ```typescript
 import { notify } from '@notifypush/sdk';
 
+// Fire alert from any API route, Server Action, or webhook:
 await notify.send({
+  topic: "my-private-alerts-9901",
   title: "💳 Payment Received",
   message: "Order #8491 paid $149.00 via Stripe",
   priority: "high",
   tags: ["moneybag", "white_check_mark"],
-  clickUrl: "https://yourdashboard.com/orders/8491",
+  clickUrl: "https://admin.yourdomain.com/orders/8491",
   actions: [
     { action: "view", label: "View Invoice", url: "https://stripe.com/receipt/8491" }
   ]
@@ -90,38 +124,55 @@ await notify.send({
 
 ---
 
-### 2. Python (FastAPI, Django, Flask, Scripts)
+### 2. Python (FastAPI, Django, Flask)
+*Deep Dive:* **[Python SDK Documentation](docs/SDK_PYTHON.md)**
+
+```bash
+pip install notifypush
+```
 
 ```python
 from notifypush import notify
 
 notify.send(
-    title="🚀 Deployment Completed",
-    message="Vercel production build deployed in 32s",
-    priority="high",
-    tags=["rocket", "tada"]
+    topic="my-private-alerts-9901",
+    title="🔥 CPU Load Warning",
+    message="Server utilization reached 92.4%",
+    priority="urgent",
+    tags=["warning", "fire"],
+    click_url="https://grafana.internal.net"
 )
 ```
 
 ---
 
-### 3. PHP (Laravel, Core PHP, WordPress)
+### 3. PHP (Laravel, Core PHP)
+*Deep Dive:* **[PHP SDK Documentation](docs/SDK_PHP.md)**
+
+```bash
+composer require notifypush/client
+```
 
 ```php
 use NotifyPush\NotifyPush;
 
-$notify = new NotifyPush(topic: 'my-secret-topic');
+$notify = new NotifyPush(topic: 'my-private-alerts-9901');
 $notify->send(
-    title: 'New User Signup',
-    message: 'user@example.com registered for Pro Plan',
+    title: '📦 Order Dispatched',
+    message: 'Shipment #TRK-8812 has departed warehouse',
     priority: 'high',
-    tags: ['star', 'bust_in_silhouette']
+    tags: ['truck', 'package']
 );
 ```
 
 ---
 
-### 4. Go (Golang Services)
+### 4. Go (Golang Microservices)
+*Deep Dive:* **[Go SDK Documentation](docs/SDK_GO.md)**
+
+```bash
+go get github.com/SudhirDevOps1/notify-push/sdk/go
+```
 
 ```go
 package main
@@ -132,67 +183,98 @@ import (
 )
 
 func main() {
-    client := notifypush.NewClient("https://ntfy.sh", "my-topic", "")
-    client.Send(context.Background(), "Server Alert", "Disk usage at 91%", "urgent", []string{"warning"}, nil)
+    client := notifypush.NewClient("https://ntfy.sh", "my-private-alerts-9901", "")
+    _ = client.Send(context.Background(), "Backup Finished", "PostgreSQL database dump uploaded to S3", "default", []string{"floppy_disk"}, nil)
 }
 ```
 
 ---
 
-### 5. cURL / Terminal / GitHub Actions
+### 5. CLI & GitHub Actions Workflow
 
-```bash
-curl -X POST "https://ntfy.sh/my-secret-topic" \
-  -H "Title: Pipeline Succeeded" \
-  -H "Priority: high" \
-  -H "Tags: white_check_mark" \
-  -d "All 42 integration tests passed on main branch."
-```
+In your `.github/workflows/deploy.yml`:
 
-Or in your `.github/workflows/deploy.yml`:
 ```yaml
-- name: Notify Phone
+- name: Notify Phone on Build Failure
+  if: failure()
   uses: SudhirDevOps1/notify-push/sdk/cli@main
   with:
     topic: ${{ secrets.NOTIFY_TOPIC }}
-    title: 'Deploy Successful'
-    message: 'Release v1.0 deployed to production.'
+    title: '❌ CI Pipeline Failed'
+    message: 'Commit ${{ github.sha }} failed tests on branch ${{ github.ref_name }}'
+    priority: 'urgent'
+    tags: 'rotating_light,x'
 ```
 
 ---
 
-## 🔒 Security & Privacy Architecture
+## 📱 Android Mobile App
 
-1. **Zero Central Database**: The Android app does not send your data to any centralized database or telemetry service.
-2. **Cryptographic Topic Obfuscation**: Use HMAC-SHA256 derived topics so no crawler can guess your public channel.
-3. **End-to-End Encryption (E2EE)**: Payloads can be encrypted client-side using `AES-256-GCM` before dispatching. Only your physical Android device holding the key can decrypt it.
-4. **Self-Hosted Freedom**: Full support for your own self-hosted private ntfy Docker container on your own domain.
+The Android client is built with modern **Jetpack Compose (Material 3)**, **Room Database**, and **Kotlin Coroutines**:
+
+### Instant QR Code Scanner
+Scan any camera QR code formatted with JSON or URL schemas (`ntfy://host/topic?token=...`) to auto-configure topic name, custom gateway server, and auth credentials in 1 second.
+
+### 24/7 Resilient Background Daemon
+The app operates an official Android Foreground Service (`NotificationListenerService`) that maintains an uninterrupted TLS SSE connection with automatic exponential backoff reconnection.
+
+### Battery Optimization Setup
+To prevent aggressive OEM battery managers (MIUI, OneUI, ColorOS) from sleeping the background stream:
+1. Tap the **"Enable 24/7 Background Delivery"** card inside the app.
+2. Select **"Unrestricted / No Restrictions"** in Android Battery Settings.
 
 ---
 
-## 🛠️ Build & Development
+## 🐳 Self-Hosting with Docker
+*Deep Dive:* **[Self-Hosting Guide](docs/SELF_HOSTING.md)**
 
-### Requirements
-- JDK 17+
-- Android Studio Jellyfish / Koala or newer
-- Android SDK 34 / Android 8.0+ (API 26+)
+Run your own private notification gateway on a VPS in 30 seconds:
 
-### Running Locally
 ```bash
-# Clone the repository
-git clone https://github.com/SudhirDevOps1/notify-push.git
-cd notify-push
-
-# Build the Android APK
-./gradlew assembleDebug
-
-# Run Unit Tests
-./gradlew testDebugUnitTest
+docker run -d \
+  --name notifypush-server \
+  --restart unless-stopped \
+  -p 8080:80 \
+  -v /var/cache/ntfy:/var/cache/ntfy \
+  -e NTFY_BASE_URL="https://push.yourdomain.com" \
+  binwiederhier/ntfy serve
 ```
+
+In the Android App, set the **Server URL** to `https://push.yourdomain.com`.
 
 ---
 
-## 📄 License
+## 🔒 Security & End-to-End Encryption
+*Deep Dive:* **[Enterprise Architecture](docs/ARCHITECTURE.md)**
 
-This project is licensed under the [MIT License](LICENSE).
-Created and maintained with ❤️ by [SudhirDevOps1](https://github.com/SudhirDevOps1).
+1. **HMAC Topic Obfuscation**: Use HMAC-SHA256 derived topics so no external crawler can guess your notification channel.
+2. **AES-256-GCM Zero-Knowledge Encryption**: Encrypt sensitive payloads client-side prior to dispatching. Only your physical Android device holding the matching key can decrypt the message.
+3. **Android Keystore**: Security preferences and decryption keys are secured by Android hardware-backed Keystore.
+
+---
+
+## 📚 Documentation Index
+
+All specialized implementation guides are located in the [`docs/`](docs/) directory:
+
+| Document | Description |
+|---|---|
+| 🇮🇳 **[`docs/README.hinglish.md`](docs/README.hinglish.md)** | **Complete step-by-step Hindi/Hinglish user guide** |
+| 📘 **[`docs/SDK_TYPESCRIPT.md`](docs/SDK_TYPESCRIPT.md)** | TypeScript SDK guide (Next.js, Express, HMAC, E2EE) |
+| 🐍 **[`docs/SDK_PYTHON.md`](docs/SDK_PYTHON.md)** | Python SDK guide (FastAPI, Django, Celery, scripts) |
+| 🐘 **[`docs/SDK_PHP.md`](docs/SDK_PHP.md)** | PHP & Laravel notification channel guide |
+| 🐹 **[`docs/SDK_GO.md`](docs/SDK_GO.md)** | Golang microservice client guide |
+| 🐳 **[`docs/SELF_HOSTING.md`](docs/SELF_HOSTING.md)** | Docker Compose & Nginx/Caddy SSL setup |
+| 📡 **[`docs/API_REFERENCE.md`](docs/API_REFERENCE.md)** | Complete HTTP API headers & payload specification |
+| 🏛️ **[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)** | Enterprise security & outbox design blueprint |
+
+---
+
+## 🤝 Contributing & License
+
+Contributions, bug reports, and PRs are warmly welcome! Please review:
+- [Contributing Guidelines](CONTRIBUTING.md)
+- [Security Policy](SECURITY.md)
+
+**License:** This project is licensed under the [MIT License](LICENSE).  
+Created and maintained with ❤️ by **[SudhirDevOps1](https://github.com/SudhirDevOps1)** (`singhjgh30@gmail.com`).
