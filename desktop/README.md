@@ -13,14 +13,14 @@
 ## ⚡ Features
 
 - 🔔 **Native Windows 10/11 Toast Notifications**: Rich alerts with titles, priority levels, clickable action buttons, and direct URL handling.
+- 🔒 **Zero-Knowledge End-to-End Encryption (AES-256-GCM)**: Native on-the-fly decryption for incoming encrypted alerts using channel passphrases. The public server sees zero plaintext.
+- 📷 **Built-in Channel QR Code Generator**: Generate shareable QR codes for any channel that can be scanned instantly with the Android mobile app camera to import topic and E2EE keys.
+- 🛡️ **Rapid Alert Flood Throttling**: Intelligent debounce filter groups repeating alerts from the same channel within 15 seconds, preventing Windows toast notification storms.
 - 🔕 **24/7 Background System Tray Daemon**: Minimizes to system tray on close (`✕`). Stays active in the background with zero lag and near-zero memory footprint.
-- 📡 **Real-time SSE Stream**: Direct, low-latency Server-Sent Events listener connected to `ntfy.sh` or your private self-hosted Docker server.
+- 📡 **Real-time Multi-Channel SSE Stream**: Direct, low-latency Server-Sent Events listener connected to `ntfy.sh` or your private self-hosted Docker server.
 - 📜 **Local Persistent History**: Stores received notifications locally in `%APPDATA%/NotifyPush/history.json` with search and JSON export.
 - 🎨 **Material 3 Dark UI**: Beautiful modern dark UI matching the Android mobile application aesthetic.
 - 🔒 **Single Instance Lock**: Ensures only one instance runs at any time, avoiding duplicate notifications.
-
----
-
 
 ---
 
@@ -29,10 +29,12 @@
 The NotifyPush Desktop application provides a built-in **Multi-App Channels Manager** that lets you monitor notifications across all your different websites, backend servers, and automation jobs simultaneously:
 
 - ➕ **Add Distinct Apps**: Manage separate channels for `E-Commerce Orders`, `DevOps VPS`, `Client Leads`, etc.
+- 🔐 **Optional E2EE Passphrase**: Add an optional encryption passphrase to any app. Messages sent to this channel will be encrypted with AES-256-GCM on the sender side and decrypted locally on your PC.
+- 📷 **Instant QR Code Sharing**: Click **QR** on any app card to view or download a QR code. Scanning it with NotifyPush Mobile instantly syncs the app name, topic, and E2EE password.
 - 🎲 **Unguessable Topic Generator**: One-click high-entropy random topic generator ensures maximum privacy.
-- 🏷️ **Origin Tagging**: Native Windows toasts automatically tag the alert title with the originating app: `[AppName] Title`.
-- 🌐 **Ready-Made Code Modal**: Click the code icon on any app to view and copy instant integration snippets for **Node/TypeScript**, **Python**, **PHP**, **Go**, and **cURL**.
-- 🔔 **Instant Test Ping**: Verify that your Windows toast alerts and audio notifications are firing correctly.
+- 🏷️ **Origin Tagging**: Native Windows toasts automatically tag the alert title with the originating app: `[AppName] Title` (or `🔒 [AppName] Title` for encrypted alerts).
+- 🌐 **Ready-Made Code Modal**: Click the code icon on any app to view and copy instant integration snippets for **Web SDK (Vanilla/React/Next.js)**, **Node/TypeScript**, **Python**, **PHP**, **Go**, and **cURL**—with your E2EE key pre-filled.
+- 🔔 **Instant Test Ping**: Send live test alerts directly from the UI to verify sound, toast notifications, and E2EE decryption.
 - 🗑️ **Safe Channel Deletion**: Remove inactive channels with one click.
 
 ---

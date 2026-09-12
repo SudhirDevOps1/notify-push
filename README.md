@@ -233,7 +233,47 @@ curl -X POST "https://ntfy.sh/my-private-alerts-9901" \
 
 ## 📦 Universal SDK Toolkit
 
-All SDKs live directly in the `/sdk` directory and are designed with **zero heavy dependencies** and fail-safe, non-crashing execution.
+All SDKs live directly in the `/sdk` and `/web` directories and are designed with **zero heavy dependencies** and fail-safe, non-crashing execution.
+
+### 0. Universal Web Client (Any Website, Browser, React, Vue, HTML)
+[![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=flat-square&logo=javascript&logoColor=black)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
+[![CDN](https://img.shields.io/badge/CDN-jsDelivr-E84D31?style=flat-square&logo=jsdelivr&logoColor=white)](https://cdn.jsdelivr.net/gh/SudhirDevOps1/notify-push@main/web/notifypush.js)
+[![Zero-Knowledge E2EE](https://img.shields.io/badge/Encryption-AES--256--GCM-10B981?style=flat-square)](#-security--end-to-end-encryption)
+
+Zero dependencies. Add instant real-time push alerts to any website, contact form, React/Vue app, Next.js page, WordPress, or Shopify store:
+
+```html
+<!-- 1. Include via jsDelivr CDN -->
+<script src="https://cdn.jsdelivr.net/gh/SudhirDevOps1/notify-push@main/web/notifypush.js"></script>
+
+<script>
+  // 2. Initialize for your site/channel (with optional Zero-Knowledge E2EE)
+  const notify = new NotifyPush({
+    serverUrl: 'https://ntfy.sh',
+    topic: 'my-shop-leads-9821',
+    password: 'my-secret-e2ee-passphrase' // 🔒 AES-256-GCM Zero-Knowledge E2EE
+  });
+
+  // 3. Dispatch alert on user action, purchase, or booking
+  notify.send({
+    title: 'New Customer Lead 🚀',
+    message: 'User John Doe submitted an inquiry.',
+    priority: 'high',
+    tags: ['lead', 'fire']
+  });
+
+  // 4. Or auto-bind any HTML form to send alert on submit (excludes sensitive inputs)
+  notify.bindForm('#contactUsForm', {
+    title: 'New Form Submission 📩',
+    priority: 'high'
+  });
+
+  // 5. Auto-monitor and alert on uncaught JavaScript runtime errors
+  notify.captureErrors();
+</script>
+```
+
+---
 
 ### 1. TypeScript / Node.js / Next.js
 [![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
@@ -436,11 +476,30 @@ In the Android App, set the **Server URL** to `https://push.yourdomain.com`.
 ---
 
 ## 🔒 Security & End-to-End Encryption
-*Deep Dive:* **[Enterprise Architecture](docs/ARCHITECTURE.md)**
+*Deep Dive:* **[Enterprise Architecture](docs/ARCHITECTURE.md)** | **[Security Policy](SECURITY.md)**
 
-1. **HMAC Topic Obfuscation**: Use HMAC-SHA256 derived topics so no external crawler can guess your notification channel.
-2. **AES-256-GCM Zero-Knowledge Encryption**: Encrypt sensitive payloads client-side prior to dispatching. Only your physical Android device holding the matching key can decrypt the message.
-3. **Android Keystore**: Security preferences and decryption keys are secured by Android hardware-backed Keystore.
+NotifyPush features true **Zero-Knowledge End-to-End Encryption (E2EE)** based on standard **AES-256-GCM** across Android, Windows Desktop, and the Web Client SDK.
+
+```
+┌─────────────────────────┐          ┌───────────────────────┐          ┌─────────────────────────┐
+│   Sender (Web / API)    │          │  Public Relay Server  │          │   Receiver (Phone / PC) │
+│                         │          │       (ntfy.sh)       │          │                         │
+│ 1. Plaintext alert      │          │                       │          │ 4. Receives encrypted   │
+│ 2. AES-256-GCM Encrypt  ├─────────►│ SEES ONLY CIPHERTEXT! ├─────────►│    envelope             │
+│    with channel secret  │  (POST)  │ Title: 🔒 Encrypted   │  (SSE)   │ 5. AES-256-GCM Decrypt  │
+│ 3. Envelope:            │          │ Body:  {"_e2e": 1...} │          │    with channel secret  │
+│    {"_e2e":1, iv, data} │          │                       │          │ 6. Shows: 🔒 [App] Alert│
+└─────────────────────────┘          └───────────────────────┘          └─────────────────────────┘
+```
+
+1. **AES-256-GCM Authenticated Encryption**:
+   - 256-bit symmetric key derived deterministically via `SHA-256(passphrase)`.
+   - 12-byte cryptographically secure random IV generated per message.
+   - 128-bit authentication tag prevents tampering, replay attacks, or bit flipping.
+2. **Zero Plaintext in Transit**: The public server (`ntfy.sh` or your Docker gateway) never sees the message title, body, tags, or click URLs.
+3. **Hardware Keystore Protection**: On Android, credentials and channel passphrases are secured via Android hardware-backed Keystore and `EncryptedSharedPreferences`.
+4. **QR Code Camera Auto-Sync**: Channels configured with an E2EE password generate QR codes that bundle the secret key safely into `&pwd=...` so scanning the QR code on mobile or PC auto-configures both the topic and the decryption key in one tap!
+5. **HMAC Topic Obfuscation**: Use high-entropy random topics (generated with the in-app 🎲 dice button) or HMAC-SHA256 derived topics to prevent uninvited eavesdroppers from discovering your channel.
 
 ---
 

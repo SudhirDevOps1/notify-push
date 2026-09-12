@@ -11,19 +11,6 @@
   <a href="../LICENSE"><img src="https://img.shields.io/badge/license-MIT-3B82F6?style=for-the-badge" alt="License"/></a>
   <a href="../README.md"><img src="https://img.shields.io/badge/Language-%F0%9F%87%AC%F0%9F%87%A7%20English%20Docs-blue?style=for-the-badge" alt="English Documentation"/></a>
 </p>
-# <img src="../public/app_icon.svg" width="36" height="36" alt="NotifyPush Icon" valign="middle" /> NotifyPush - Hinglish संपूर्ण गाइड (हिंदी / English)
-
-<p align="center">
-  <img src="../public/hero_banner.svg" alt="NotifyPush Hero Banner" width="100%" />
-</p>
-
-<p align="center">
-  <a href="https://www.npmjs.com/package/notifypush-client"><img src="https://img.shields.io/npm/v/notifypush-client?style=for-the-badge&logo=npm&logoColor=white&color=CB3837" alt="NPM Version"/></a>
-  <a href="https://github.com/SudhirDevOps1/notify-push/releases"><img src="https://img.shields.io/github/v/release/SudhirDevOps1/notify-push?style=for-the-badge&logo=github&color=7C3AED" alt="GitHub Release"/></a>
-  <a href="https://developer.android.com/"><img src="https://img.shields.io/badge/Android-8.0%2B-3DDC84?style=for-the-badge&logo=android&logoColor=white" alt="Android"/></a>
-  <a href="../LICENSE"><img src="https://img.shields.io/badge/license-MIT-3B82F6?style=for-the-badge" alt="License"/></a>
-  <a href="../README.md"><img src="https://img.shields.io/badge/Language-%F0%9F%87%AC%F0%9F%87%A7%20English%20Docs-blue?style=for-the-badge" alt="English Documentation"/></a>
-</p>
 
 > **NotifyPush** ek lightweight, privacy-first, zero-telemetry push notification system hai. Iski madad se aap apni kisi bhi website, backend API, serverless function (Next.js, Python, PHP, Go), ya DevOps script se apne Android mobile par **direct real-time Heads-Up notification (< 500ms)** bhej sakte hain.
 > Isme koi **Firebase (FCM)** ka jhanjhat nahi hai, koi paid third-party subscription nahi hai, aur aapka data 100% private rehta hai.
@@ -236,6 +223,43 @@ curl -X POST "https://ntfy.sh/sudhir-alerts-9821" \
 
 ## 6. Code Implementation (Apne Project Mein Kaise Lagayein)
 
+### 0. Universal Web Client (Browser, React, Vue, HTML Contact Form, Shopify, WordPress)
+
+Kisi bhi website ke frontend par instant notification lagane ke liye sirf ek `<script>` tag jodein:
+
+```html
+<!-- 1. Web Client SDK ko include karein -->
+<script src="https://cdn.jsdelivr.net/gh/SudhirDevOps1/notify-push@main/web/notifypush.js"></script>
+
+<script>
+  // 2. Apne Web App / Channel ke sath initialize karein (Optional E2EE Password ke sath)
+  const notify = new NotifyPush({
+    serverUrl: 'https://ntfy.sh',
+    topic: 'my-shop-alerts-9821',
+    password: 'my-secret-e2ee-passphrase' // 🔒 Zero-Knowledge AES-256-GCM E2EE
+  });
+
+  // 3. User action ya checkout par alert bhejein:
+  notify.send({
+    title: 'Naya Order Received 🛒',
+    message: 'Rahul ne Rs. 4,999 ka order confirm kiya.',
+    priority: 'high',
+    tags: ['cart', 'moneybag']
+  });
+
+  // 4. Contact Form par 1-line me auto-alert lagayein:
+  notify.bindForm('#contactUsForm', {
+    title: 'Naya Lead Form 📝',
+    priority: 'high'
+  });
+
+  // 5. Website par koi JS crash / runtime error aane par turant alert paayein:
+  notify.captureErrors();
+</script>
+```
+
+---
+
 ### A. Next.js / Node.js / TypeScript
 
 Humara official `notifypush-client` zero-dependency native fetch use karta hai:
@@ -378,14 +402,31 @@ Apne `.github/workflows/deploy.yml` me add karein:
 
 ---
 
-## 7. Security: Topic Ko Secret & Private Kaise Banayein?
+## 7. Security: Zero-Knowledge End-to-End Encryption (AES-256-GCM) & Topic Safety
 
-Agar aap public `ntfy.sh` server use kar rahe hain, toh koi bhi aam naam (jaise `test` ya `alerts`) na rakhein kyunki koi bhi usse sun sakta hai.
+### 🔒 Zero-Knowledge End-to-End Encryption (E2EE) Kaise Kaam Karta Hai?
 
-### Best Practice (Secure Topic Name):
-1. **UUID ya Hash use karein**: Jaise `alert-8f92a4e1-2c09-482a`
-2. **Access Token lagayein**: ntfy par account banakar token generate karein aur app me `Auth Token` field me daal dein. Fir bina token ke koi message nahi padh sakega.
-3. **End-to-End Encryption (E2EE)**: TypeScript SDK me built-in `encryptPayload()` function hai jo AES-256-GCM se data encrypt karta hai.
+Jab aap apne Channel / Web App me ek **E2EE Passphrase / Password** set karte hain, toh aapka message public server tak pahunchne se pehle hi browser ya script me **AES-256-GCM** se lock ho jata hai:
+
+1. **Sender-side Encryption:**
+   - Aapka secret password `SHA-256` se 256-bit key me convert hota hai.
+   - Message ka Title, Body text, Tags aur Click URL ek JSON envelope me encrypt ho jata hai:
+     ```json
+     {"_e2e": 1, "iv": "<12-bytes random IV>", "data": "<ciphertext + 16-bytes tag>"}
+     ```
+   - Public server ko sirf dikhta hai: `Title: 🔒 Encrypted Alert` aur random encrypted data! Public server ke paas plaintext padhne ka koi zariya nahi hota (Zero-Knowledge).
+
+2. **Receiver-side Decryption (Mobile & PC):**
+   - Notification phone (Android) ya desktop (Windows) me aate hi, app channel ke password se use on-the-fly decrypt karke original text display karta hai: `🔒 [My Store] Rahul ne order place kiya!`.
+   - Agar password galat hai ya set nahi hai, toh app bina kisi crash ke warning show karta hai: `⚠️ Passphrase mismatch: Unable to decrypt this alert`.
+
+3. **📷 Camera QR Code se Auto-Sync:**
+   - Desktop App ya Android App me jab aap kisi channel ka QR code open karte hain, toh agar password set hai toh QR code me `&pwd=...` secretly jud jata hai.
+   - Mobile camera se scan karte hi Channel Name, Topic aur E2EE Password ek hi click me auto-import ho jate hain!
+
+### 🎲 Topic Safety Best Practices:
+1. **Dice Button 🎲 Ka Istemal:** Mobile aur Desktop dono apps me topic input ke bagal me 🎲 dice button diya gaya hai, jispar tap karte hi unguessable high-entropy topic name (e.g. `alerts-9f4a12bc`) ban jata hai.
+2. **Access Token:** Agar aap ntfy.sh ka paid ya private topic use karte hain, toh `Auth Token` field me Bearer token daal sakte hain.
 
 ---
 

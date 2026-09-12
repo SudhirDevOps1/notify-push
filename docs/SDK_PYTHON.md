@@ -89,3 +89,32 @@ def process_data(self, record_id):
 | `default` | Standard notification sound + vibration |
 | `high` | Heads-up banner, sound, vibration |
 | `urgent` | Critical heads-up banner, high priority vibration, bypasses DND if configured |
+
+---
+
+## 5. Zero-Knowledge E2EE (AES-256-GCM) with Python
+
+When your NotifyPush channel has an E2EE password configured, encrypt the payload before dispatching:
+
+```python
+import base64, json, os, hashlib, requests
+from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+
+def send_encrypted(topic: str, password: str, title: str, message: str):
+    key = hashlib.sha256(password.encode('utf-8')).digest()
+    iv = os.urandom(12)
+    payload = json.dumps({"title": title, "message": message}).encode('utf-8')
+    ciphertext_and_tag = AESGCM(key).encrypt(iv, payload, None)
+    
+    envelope = json.dumps({
+        "_e2e": 1,
+        "iv": base64.b64encode(iv).decode('utf-8'),
+        "data": base64.b64encode(ciphertext_and_tag).decode('utf-8')
+    })
+    
+    requests.post(
+        f"https://ntfy.sh/{topic}",
+        data=envelope,
+        headers={"Title": "🔒 Encrypted Alert", "Tags": "lock"}
+    )
+```

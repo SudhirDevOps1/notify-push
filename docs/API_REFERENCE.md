@@ -142,3 +142,115 @@ Duration: 4m 12s
 Destination: Cloudflare R2 (ap-south-1)
 Status: Verification checksum matched.
 ```
+
+---
+
+## 🔒 Zero-Knowledge End-to-End Encryption (E2EE) Specification
+
+NotifyPush supports client-side authenticated encryption using **AES-256-GCM**. When a channel has an E2EE password configured, the sender encrypts the payload before transmission so that the public relay server never accesses plaintext.
+
+### 1. Wire Format Specification
+```json
+{
+  "_e2e": 1,
+  "iv": "<Base64 encoded 12-byte random IV>",
+  "data": "<Base64 encoded (Ciphertext + 16-byte Authentication Tag)>"
+}
+```
+
+- **Algorithm**: `AES/GCM/NoPadding` (256-bit key)
+- **Key Derivation**: `SHA-256(passphrase)` (produces exact 32 bytes)
+- **Initialization Vector (IV)**: 12 bytes cryptographically secure random bytes
+- **Authentication Tag**: 16 bytes (128-bit) appended directly to the ciphertext
+
+### 2. HTTP Request Envelope
+When sending an encrypted alert:
+- **Title Header**: `Title: 🔒 Encrypted Alert`
+- **Tags Header**: `Tags: lock`
+- **Body**: The JSON envelope string above.
+
+### 3. Sender Code Recipes
+
+#### A. JavaScript / Web Client SDK (`web/notifypush.js`)
+```javascript
+// Native Web Crypto API (Browser & Node.js 18+)
+const notify = new NotifyPush({
+  serverUrl: 'https://ntfy.sh',
+  topic: 'my-private-topic',
+  password: 'my-e2ee-secret-passphrase'
+});
+
+await notify.send({
+  title: 'Order Confirmed 💳',
+  message: 'Order #9021 paid by customer.',
+  tags: ['cart', 'moneybag']
+});
+```
+
+#### B. Python (`cryptography` library)
+```python
+import base64, json, os, hashlib, requests
+from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+
+def send_encrypted_alert(topic: str, password: str, title: str, message: str):
+    # 1. Derive 256-bit key via SHA-256
+    key = hashlib.sha256(password.encode('utf-8')).digest()
+    
+    # 2. 12-byte random IV
+    iv = os.urandom(12)
+    
+    # 3. Plaintext JSON
+    payload = json.dumps({"title": title, "message": message}).encode('utf-8')
+    
+    # 4. AES-256-GCM encrypt (appends 16-byte tag)
+    aesgcm = AESGCM(key)
+    ciphertext_and_tag = aesgcm.encrypt(iv, payload, None)
+    
+    # 5. Envelope
+    envelope = json.dumps({
+        "_e2e": 1,
+        "iv": base64.b64encode(iv).decode('utf-8'),
+        "data": base64.b64encode(ciphertext_and_tag).decode('utf-8')
+    })
+    
+    # 6. Dispatch
+    requests.post(
+        f"https://ntfy.sh/{topic}",
+        data=envelope,
+        headers={"Title": "🔒 Encrypted Alert", "Tags": "lock"}
+    )
+```
+
+#### C. Node.js Native (`crypto` module)
+```javascript
+const crypto = require('crypto');
+const https = require('https');
+
+function sendEncryptedAlert(topic, password, title, message) {
+  const key = crypto.createHash('sha256').update(password, 'utf8').digest();
+  const iv = crypto.randomBytes(12);
+  const cipher = crypto.createCipheriv('aes-256-gcm', key, iv);
+  
+  const payload = JSON.stringify({ title, message });
+  const ciphertext = Buffer.concat([cipher.update(payload, 'utf8'), cipher.final()]);
+  const authTag = cipher.getAuthTag();
+  const fullData = Buffer.concat([ciphertext, authTag]);
+
+  const envelope = JSON.stringify({
+    _e2e: 1,
+    iv: iv.toString('base64'),
+    data: fullData.toString('base64')
+  });
+
+  const req = https.request(`https://ntfy.sh/${topic}`, {
+    method: 'POST',
+    headers: {
+      'Title': '🔒 Encrypted Alert',
+      'Tags': 'lock',
+      'Content-Length': Buffer.byteLength(envelope)
+    }
+  });
+  req.write(envelope);
+  req.end();
+}
+```
