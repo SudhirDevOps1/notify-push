@@ -100,6 +100,7 @@ fun NotifyPushApp(
     val token by viewModel.token.collectAsStateWithLifecycle()
     val isServiceEnabled by viewModel.isServiceEnabled.collectAsStateWithLifecycle()
     val connectionState by viewModel.connectionState.collectAsStateWithLifecycle()
+    val channelApps by viewModel.channelApps.collectAsStateWithLifecycle()
 
     val rawNotifications by viewModel.rawNotifications.collectAsStateWithLifecycle()
     val notifications by viewModel.notifications.collectAsStateWithLifecycle()
@@ -114,6 +115,7 @@ fun NotifyPushApp(
     var showClearConfirmDialog by remember { mutableStateOf(false) }
     var showQrScanner by remember { mutableStateOf(false) }
     var showIntegrationDialog by remember { mutableStateOf(false) }
+    var selectedSnippetApp by remember { mutableStateOf<com.example.data.ChannelApp?>(null) }
 
     LaunchedEffect(testMessage) {
         testMessage?.let { msg ->
@@ -235,6 +237,7 @@ fun NotifyPushApp(
                         serverUrl = serverUrl,
                         topic = topic,
                         token = token,
+                        channelApps = channelApps,
                         isServiceEnabled = isServiceEnabled,
                         isTesting = isTesting,
                         onServerUrlChange = viewModel::updateServerUrl,
@@ -244,7 +247,14 @@ fun NotifyPushApp(
                         onScanQrClick = { showQrScanner = true },
                         onSaveAndConnect = viewModel::saveAndConnect,
                         onDisconnect = viewModel::disconnect,
-                        onSendTest = viewModel::sendTestNotification
+                        onSendTest = viewModel::sendTestNotification,
+                        onAddApp = viewModel::addChannelApp,
+                        onDeleteApp = viewModel::deleteChannelApp,
+                        onTestApp = viewModel::sendTestNotificationForApp,
+                        onOpenCodeForApp = { app ->
+                            selectedSnippetApp = app
+                            showIntegrationDialog = true
+                        }
                     )
                 }
 
@@ -413,7 +423,12 @@ fun NotifyPushApp(
                 serverUrl = serverUrl,
                 topic = topic,
                 token = token,
-                onDismissRequest = { showIntegrationDialog = false }
+                channelApps = channelApps,
+                initialSelectedAppId = selectedSnippetApp?.id,
+                onDismissRequest = {
+                    showIntegrationDialog = false
+                    selectedSnippetApp = null
+                }
             )
         }
     }

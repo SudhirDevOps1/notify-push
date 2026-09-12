@@ -32,6 +32,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val token: StateFlow<String> = prefs.tokenFlow
     val isServiceEnabled: StateFlow<Boolean> = prefs.isServiceEnabledFlow
     val connectionState: StateFlow<ConnectionState> = NotificationListenerService.connectionState
+    val channelApps: StateFlow<List<com.example.data.ChannelApp>> = prefs.channelAppsFlow
 
     val rawNotifications: StateFlow<List<NotificationItem>> = repository.allNotifications
         .stateIn(
@@ -165,13 +166,59 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         NotificationListenerService.stop(getApplication())
     }
 
+    fun addChannelApp(name: String, topic: String) {
+        val trimmedTopic = topic.trim()
+        if (trimmedTopic.isBlank()) {
+            _testMessage.value = "Topic cannot be empty"
+            return
+        }
+        val app = prefs.addChannelApp(name, trimmedTopic)
+        _testMessage.value = "Added app '${app.name}' (#${app.topic})"
+        if (prefs.isServiceEnabled) {
+            NotificationListenerService.start(getApplication())
+        }
+    }
+
+    fun deleteChannelApp(id: String) {
+        prefs.deleteChannelApp(id)
+        if (prefs.isServiceEnabled) {
+            NotificationListenerService.start(getApplication())
+        }
+    }
+
+    fun sendTestNotificationForApp(app: com.example.data.ChannelApp) {
+        val currentServer = prefs.serverUrl.trim()
+        val currentToken = prefs.token.trim()
+
+        viewModelScope.launch {
+            _isTesting.value = true
+            _testMessage.value = null
+
+            val result = NtfySender.sendTestNotification(
+                serverUrl = currentServer,
+                topic = app.topic,
+                token = currentToken.ifBlank { null },
+                title = "Test Alert: ${app.name}",
+                message = "Test alert from web app '${app.name}' (#${app.topic}). Real-time stream active!",
+                tags = "bell,rocket,white_check_mark"
+            )
+
+            _isTesting.value = false
+            result.onSuccess { msg ->
+                _testMessage.value = "Sent test alert for '${app.name}'! Check drawer."
+            }.onFailure { err ->
+                _testMessage.value = "Test Failed: ${err.message}"
+            }
+        }
+    }
+
     fun sendTestNotification() {
         val currentTopic = prefs.topic.trim()
         val currentServer = prefs.serverUrl.trim()
         val currentToken = prefs.token.trim()
 
         if (currentTopic.isBlank()) {
-            _testMessage.value = "Enter a topic name before sending test notification."
+            _testMessage.value = "Add an app or topic before sending test notification."
             return
         }
 
@@ -181,7 +228,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
             val result = NtfySender.sendTestNotification(
                 serverUrl = currentServer,
-                topic = currentTopic,
+                topic = currentTopic.split(",").firstOrNull()?.trim() ?: currentTopic,
                 token = currentToken.ifBlank { null }
             )
 

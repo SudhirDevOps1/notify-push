@@ -20,11 +20,14 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -36,6 +39,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -49,6 +53,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
+import com.example.data.ChannelApp
 import com.example.storage.SecurityPreferences
 
 @Composable
@@ -56,28 +61,47 @@ fun IntegrationCodeDialog(
     serverUrl: String,
     topic: String,
     token: String,
+    channelApps: List<ChannelApp> = emptyList(),
+    initialSelectedAppId: String? = null,
     onDismissRequest: () -> Unit
 ) {
     val context = LocalContext.current
     val effectiveServer = serverUrl.ifBlank { SecurityPreferences.DEFAULT_SERVER_URL }.removeSuffix("/")
-    val effectiveTopic = topic.ifBlank { "your-topic-name" }
     val effectiveToken = token.trim()
+
+    var activeAppId by remember(initialSelectedAppId, channelApps) {
+        mutableStateOf(initialSelectedAppId ?: channelApps.firstOrNull()?.id)
+    }
+
+    val selectedApp = channelApps.find { it.id == activeAppId }
+    val effectiveTopic = selectedApp?.topic ?: topic.ifBlank { "your-topic-name" }
+    val effectiveAppName = selectedApp?.name ?: "NotifyPush Alert"
 
     var selectedTabIndex by remember { mutableIntStateOf(0) }
     val tabs = listOf("cURL / Bash", "Next.js / Node", "Python", "PHP", "Go")
 
-    val codeSnippets = remember(effectiveServer, effectiveTopic, effectiveToken) {
+    val codeSnippets = remember(effectiveServer, effectiveTopic, effectiveToken, effectiveAppName) {
         listOf(
             // 0: cURL
             buildString {
-                append("curl -X POST \"$effectiveServer/$effectiveTopic\" \\\n")
-                append("  -H \"Title: Payment Received\" \\\n")
+                append("curl -X POST \"")
+                append(effectiveServer)
+                append("/")
+                append(effectiveTopic)
+                append("\" \\\n")
+                append("  -H \"Title: [")
+                append(effectiveAppName)
+                append("] New Alert\" \\\n")
                 append("  -H \"Priority: high\" \\\n")
-                append("  -H \"Tags: moneybag,white_check_mark\" \\\n")
+                append("  -H \"Tags: bell,rocket,white_check_mark\" \\\n")
                 if (effectiveToken.isNotEmpty()) {
-                    append("  -H \"Authorization: Bearer $effectiveToken\" \\\n")
+                    append("  -H \"Authorization: Bearer ")
+                    append(effectiveToken)
+                    append("\" \\\n")
                 }
-                append("  -d \"Order #1042 was placed for $49.00\"")
+                append("  -d \"Alert received from ")
+                append(effectiveAppName)
+                append(" successfully!\"")
             },
 
             // 1: Next.js (App Router API route)
@@ -89,14 +113,14 @@ fun IntegrationCodeDialog(
                 append("  const res = await fetch('$effectiveServer/$effectiveTopic', {\n")
                 append("    method: 'POST',\n")
                 append("    headers: {\n")
-                append("      'Title': title || 'Alert from Next.js',\n")
+                append("      'Title': title || '[$effectiveAppName] Notification',\n")
                 append("      'Priority': 'high',\n")
                 append("      'Tags': 'rocket,bell',\n")
                 if (effectiveToken.isNotEmpty()) {
                     append("      'Authorization': 'Bearer $effectiveToken',\n")
                 }
                 append("    },\n")
-                append("    body: message || 'Event triggered successfully!'\n")
+                append("    body: message || 'Event triggered from $effectiveAppName'\n")
                 append("  });\n")
                 append("  return NextResponse.json({ success: res.ok });\n")
                 append("}")
@@ -108,64 +132,62 @@ fun IntegrationCodeDialog(
                 append("def send_push(title: str, message: str):\n")
                 append("    url = '$effectiveServer/$effectiveTopic'\n")
                 append("    req = urllib.request.Request(url, data=message.encode('utf-8'), method='POST')\n")
-                append("    req.add_header('Title', title)\n")
-                append("    req.add_header('Priority', 'high')\n")
-                append("    req.add_header('Tags', 'snake,zap')\n")
+                append("    req.add_header('Title', f'[$effectiveAppName] {title}')\n")
+                append("    req.add_header('Priority', '4')\n")
+                append("    req.add_header('Tags', 'bell,snake')\n")
                 if (effectiveToken.isNotEmpty()) {
                     append("    req.add_header('Authorization', 'Bearer $effectiveToken')\n")
                 }
-                append("    with urllib.request.urlopen(req, timeout=4) as resp:\n")
-                append("        return resp.status == 200\n\n")
-                append("send_push('Python Alert', 'Backup job completed successfully!')")
+                append("    with urllib.request.urlopen(req) as resp:\n")
+                append("        return resp.status == 200\n")
             },
 
-            // 3: PHP (Laravel / cURL)
+            // 3: PHP
             buildString {
                 append("<?php\n")
                 append("\$url = '$effectiveServer/$effectiveTopic';\n")
                 append("\$headers = [\n")
-                append("    'Title: PHP Order Alert',\n")
+                append("    'Title: [$effectiveAppName] Server Notice',\n")
                 append("    'Priority: high',\n")
-                append("    'Tags: package,truck',\n")
+                append("    'Tags: bell,elephant'\n")
                 if (effectiveToken.isNotEmpty()) {
-                    append("    'Authorization: Bearer $effectiveToken',\n")
+                    append("    ,'Authorization: Bearer $effectiveToken'\n")
                 }
-                append("];\n\n")
-                append("\$ch = curl_init(\$url);\n")
-                append("curl_setopt_array(\$ch, [\n")
-                append("    CURLOPT_POST => true,\n")
-                append("    CURLOPT_POSTFIELDS => 'Customer placed new subscription order',\n")
-                append("    CURLOPT_HTTPHEADER => \$headers,\n")
-                append("    CURLOPT_RETURNTRANSFER => true,\n")
-                append("    CURLOPT_TIMEOUT => 4\n")
-                append("]);\n")
-                append("\$res = curl_exec(\$ch);\n")
-                append("curl_close(\$ch);")
+                append("];\n")
+                append("\$options = [\n")
+                append("    'http' => [\n")
+                append("        'method' => 'POST',\n")
+                append("        'header' => implode(\"\\r\\n\", \$headers),\n")
+                append("        'content' => 'Notification triggered from PHP script.'\n")
+                append("    ]\n")
+                append("];\n")
+                append("\$context = stream_context_create(\$options);\n")
+                append("\$result = file_get_contents(\$url, false, \$context);\n")
             },
 
             // 4: Go
             buildString {
                 append("package main\n\n")
                 append("import (\n")
-                append("    \"bytes\"\n")
                 append("    \"net/http\"\n")
+                append("    \"strings\"\n")
                 append(")\n\n")
-                append("func sendAlert() error {\n")
-                append("    url := \"$effectiveServer/$effectiveTopic\"\n")
-                append("    body := bytes.NewBufferString(\"Service CPU Spike Alert: 92%\")\n")
-                append("    req, _ := http.NewRequest(\"POST\", url, body)\n")
-                append("    req.Header.Set(\"Title\", \"Go Microservice\")\n")
-                append("    req.Header.Set(\"Priority\", \"urgent\")\n")
-                append("    req.Header.Set(\"Tags\", \"fire,chart\")\n")
+                append("func sendPush(title, msg string) error {\n")
+                append("    req, err := http.NewRequest(\"POST\", \"$effectiveServer/$effectiveTopic\", strings.NewReader(msg))\n")
+                append("    if err != nil { return err }\n")
+                append("    req.Header.Set(\"Title\", \"[$effectiveAppName] \" + title)\n")
+                append("    req.Header.Set(\"Priority\", \"high\")\n")
                 if (effectiveToken.isNotEmpty()) {
                     append("    req.Header.Set(\"Authorization\", \"Bearer $effectiveToken\")\n")
                 }
-                append("    _, err := http.DefaultClient.Do(req)\n")
+                append("    _, err = http.DefaultClient.Do(req)\n")
                 append("    return err\n")
-                append("}")
+                append("}\n")
             }
         )
     }
+
+    val currentSnippet = codeSnippets.getOrElse(selectedTabIndex) { codeSnippets[0] }
 
     AlertDialog(
         onDismissRequest = onDismissRequest,
@@ -181,11 +203,11 @@ fun IntegrationCodeDialog(
             ) {
                 Column {
                     Text(
-                        text = "Integration Code Generator",
+                        text = "Website Code Snippets",
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
                     )
                     Text(
-                        text = "Ready-to-use snippets with your current topic",
+                        text = "Tailored code snippets for your active web apps",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -201,7 +223,46 @@ fun IntegrationCodeDialog(
                     .fillMaxWidth()
                     .verticalScroll(rememberScrollState())
             ) {
-                // Topic & Server indicator
+                // App Selector Chips if multiple apps exist
+                if (channelApps.isNotEmpty()) {
+                    Text(
+                        text = "Select Web App:",
+                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(bottom = 6.dp)
+                    )
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        channelApps.forEach { app ->
+                            val isSelected = app.id == activeAppId
+                            FilterChip(
+                                selected = isSelected,
+                                onClick = { activeAppId = app.id },
+                                label = { Text(app.name, fontSize = 12.sp) },
+                                leadingIcon = if (isSelected) {
+                                    {
+                                        Icon(
+                                            imageVector = Icons.Default.Check,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(14.dp)
+                                        )
+                                    }
+                                } else null,
+                                colors = FilterChipDefaults.filterChipColors(
+                                    selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                                    selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
+                                )
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(10.dp))
+                }
+
+                // Target Endpoint indicator
                 Surface(
                     shape = RoundedCornerShape(8.dp),
                     color = MaterialTheme.colorScheme.surfaceVariant,
@@ -212,7 +273,7 @@ fun IntegrationCodeDialog(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Target: ",
+                            text = "Target Endpoint: ",
                             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                             color = MaterialTheme.colorScheme.primary
                         )
@@ -243,53 +304,47 @@ fun IntegrationCodeDialog(
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                // Code box with copy button
-                val currentSnippet = codeSnippets[selectedTabIndex]
+                // Code Box
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(12.dp))
-                        .background(Color(0xFF1E1E1E))
+                        .background(Color(0xFF0F172A))
                         .padding(14.dp)
                 ) {
                     Text(
                         text = currentSnippet,
-                        color = Color(0xFFD4D4D4),
                         fontFamily = FontFamily.Monospace,
-                        fontSize = 12.sp,
-                        lineHeight = 18.sp,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .horizontalScroll(rememberScrollState())
+                        fontSize = 11.5.sp,
+                        color = Color(0xFFE2E8F0),
+                        lineHeight = 16.sp,
+                        modifier = Modifier.horizontalScroll(rememberScrollState())
                     )
-                }
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                // Quick copy button
-                Button(
-                    onClick = {
-                        val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
-                        cm?.setPrimaryClip(ClipData.newPlainText("Code Snippet", currentSnippet))
-                        Toast.makeText(context, "${tabs[selectedTabIndex]} code copied!", Toast.LENGTH_SHORT).show()
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                    shape = RoundedCornerShape(10.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.ContentCopy,
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Copy ${tabs[selectedTabIndex]} Code")
                 }
             }
         },
         confirmButton = {
+            Button(
+                onClick = {
+                    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
+                    clipboard?.setPrimaryClip(ClipData.newPlainText("NotifyPush Snippet", currentSnippet))
+                    Toast.makeText(context, "Snippet copied to clipboard!", Toast.LENGTH_SHORT).show()
+                },
+                shape = RoundedCornerShape(10.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.ContentCopy,
+                    contentDescription = "Copy code",
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text("Copy Snippet")
+            }
+        },
+        dismissButton = {
             TextButton(onClick = onDismissRequest) {
-                Text("Done")
+                Text("Close")
             }
         }
     )

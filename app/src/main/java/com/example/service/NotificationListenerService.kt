@@ -249,10 +249,20 @@ class NotificationListenerService : Service() {
                     }
                     val tagsString = tagsList.joinToString(",")
 
+                    // Match incoming topic against user's configured web apps
+                    val matchingApp = prefs.findAppByTopic(topic)
+                    val appName = matchingApp?.name
+                    val formattedTitle = when {
+                        !appName.isNullOrBlank() && title.isNotBlank() -> "[$appName] $title"
+                        !appName.isNullOrBlank() -> "[$appName] New Alert"
+                        title.isNotBlank() -> title
+                        else -> ""
+                    }
+
                     // 1. Save to Room database for persistent history
                     val item = NotificationItem(
                         ntfyId = ntfyId,
-                        title = title,
+                        title = formattedTitle,
                         message = message,
                         topic = topic,
                         timestamp = timestamp,
@@ -265,12 +275,12 @@ class NotificationListenerService : Service() {
                     // 2. Dispatch High-Priority Android Notification
                     NotificationHelper.showNotification(
                         context = this@NotificationListenerService,
-                        title = title.ifBlank { null },
+                        title = formattedTitle.ifBlank { null },
                         message = message,
                         clickUrl = clickUrl,
                         priority = priority,
                         tags = tagsList,
-                        topic = topic
+                        topic = if (!appName.isNullOrBlank()) "$appName (#$topic)" else topic
                     )
                 }
             } catch (e: Exception) {
