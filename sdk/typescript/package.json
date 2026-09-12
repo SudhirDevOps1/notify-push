@@ -3,10 +3,17 @@
   "version": "1.0.0",
   "description": "Universal, lightweight, zero-dependency push notification client for NotifyPush and ntfy.sh",
   "main": "dist/index.js",
-  "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsc",
+    "prepublishOnly": "npm run build",
     "test": "echo \"No test specified\" && exit 0"
   },
   "keywords": [
@@ -25,6 +32,7 @@
     "url": "git+https://github.com/SudhirDevOps1/notify-push.git"
   },
   "devDependencies": {
+    "@types/node": "^20.0.0",
     "typescript": "^5.0.0"
   }
 }
