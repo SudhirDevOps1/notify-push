@@ -73,6 +73,33 @@
   }
 
   /**
+   * Helper: MIME RFC 2047 encode non-ASCII header strings so WHATWG fetch
+   * does not throw ByteString TypeError on emojis or UTF-8 characters.
+   * ntfy natively parses RFC 2047 (=?utf-8?B?...?=) headers.
+   */
+  function encodeHeaderValue(str) {
+    if (!str) return '';
+    var hasNonAscii = false;
+    for (var i = 0; i < str.length; i++) {
+      if (str.charCodeAt(i) > 127) {
+        hasNonAscii = true;
+        break;
+      }
+    }
+    if (!hasNonAscii) return str;
+    var b64 = '';
+    if (typeof TextEncoder !== 'undefined') {
+      var bytes = new TextEncoder().encode(str);
+      b64 = bufferToBase64(bytes);
+    } else if (typeof Buffer !== 'undefined') {
+      b64 = Buffer.from(str, 'utf8').toString('base64');
+    } else {
+      b64 = btoa(unescape(encodeURIComponent(str)));
+    }
+    return '=?utf-8?B?' + b64 + '?=';
+  }
+
+  /**
    * Encrypt payload using standard AES-256-GCM with SHA-256 key derivation.
    * Compatible with Android (E2eeHelper.kt) and Desktop (desktop/crypto.js).
    */
@@ -245,7 +272,7 @@
       };
       try {
         body = await encryptE2ee(payloadToEncrypt, options.password.trim());
-        headers['Title'] = '🔒 Encrypted Alert';
+        headers['Title'] = encodeHeaderValue('🔒 Encrypted Alert');
         headers['Tags'] = 'lock';
       } catch (encErr) {
         console.error('[NotifyPush E2EE Error]', encErr);
@@ -253,7 +280,7 @@
       }
     } else {
       if (options.title) {
-        headers['Title'] = options.title;
+        headers['Title'] = encodeHeaderValue(options.title);
       }
       if (options.tags) {
         var tagsStr = Array.isArray(options.tags) ? options.tags.join(',') : String(options.tags);
