@@ -519,7 +519,6 @@ All specialized implementation guides are located in the [`docs/`](docs/) direct
 | 🏛️ **[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)** | Enterprise security & outbox design blueprint |
 
 ---
-
 ## 🤝 Contributing & License
 
 Contributions, bug reports, and PRs are warmly welcome! Please review:
