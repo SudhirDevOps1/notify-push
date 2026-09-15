@@ -1,5 +1,4 @@
 # Contributing to NotifyPush
-
 Thank you for your interest in contributing to **NotifyPush**! We welcome bug reports, feature proposals, and pull requests.
 
 ## Development Setup
